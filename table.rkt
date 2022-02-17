@@ -38,6 +38,8 @@
        (loop (cdr c) #t acc)]
       [(eq? (car c) sp)
        (list #f (to-type (reverse acc) np) (cdr c))]
+      [(eq? (car c) #\return)
+       (loop (cdr c) q acc)]
       [(eq? (car c) #\newline)
        (list #t (to-type (reverse acc) np) (cdr c))]
       [else (loop (cdr c) q (cons (car c) acc))])))

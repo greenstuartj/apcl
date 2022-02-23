@@ -557,19 +557,28 @@
                      (loop (add1 i))])))])))]
       [_ (Fail "[ERROR] zip-with: expected vector")])))
 
+(: member-f core-signature)
+(define (member-f ev)
+  (lambda (tl ic e)
+    (match tl
+      [(list elem (VectorT v))
+       (let loop ([i : Integer 0])
+         (cond
+           [(>= i (vector-length v)) (s-un (BoolT #f))]
+           [(equal? (Unary elem (Nil)) (vector-ref v i)) (s-un (BoolT #t))]
+           [else (loop (add1 i))]))]
+      [_ (Fail "[ERROR] member: expected vector")])))
+
 ; floor
 ; ceiling
 ; get-many
 ; seq
 ; filter
-; scan_n
 ; group_n
-; zip_with
 ; read_dsv
 ; read-lines
 ; repeat
 ; while
-; member
 ; rotate
 ; string_split (maybe just split and work on string|vector)
 ; string_to_number
@@ -577,7 +586,7 @@
 ; amend (and amend_mutate?)
 ; index
 ; index_where
-; push (or diff name, like & put will promote to list)
+; push (or diff name, like & but will promote to list)
 ; key
 ; unique
 ; intersection
@@ -601,4 +610,5 @@
    "scan" (list 2 scan-f)
    "scan_n" (list 3 scan-n-f)
    "zip" (list 2 zip-f)
-   "zip_with" (list 3 zip-with-f)))
+   "zip_with" (list 3 zip-with-f)
+   "member" (list 2 member-f)))

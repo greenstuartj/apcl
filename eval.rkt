@@ -33,11 +33,10 @@
 (: combine-icontext (-> (IContext Type) (IContext Type) (IContext Type)))
 (define (combine-icontext ic1 ic2)
   (let loop ([ks (hash-keys ic1)]
-             [vs (hash-values ic1)]
              [ic3 : (IContext Type) ic2])
     (cond
       [(null? ks) ic3]
-      [else (loop (cdr ks) (cdr vs) (hash-set ic3 (car ks) (car vs)))])))
+      [else (loop (cdr ks) (hash-set ic3 (car ks) (hash-ref ic1 (car ks))))])))
 
 (: eval-ast
    (-> (AST Type)

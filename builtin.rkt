@@ -559,6 +559,9 @@
 
 (: member-f core-signature)
 (define (member-f ev)
+  (: char-vector->string (-> (Mutable-Vectorof Char) String))
+  (define (char-vector->string v)
+    (list->string (vector->list v)))
   (lambda (tl ic e)
     (match tl
       [(list elem (VectorT v))
@@ -567,7 +570,11 @@
            [(>= i (vector-length v)) (s-un (BoolT #f))]
            [(equal? (Unary elem (Nil)) (vector-ref v i)) (s-un (BoolT #t))]
            [else (loop (add1 i))]))]
-      [_ (Fail "[ERROR] member: expected vector")])))
+      [(list (StringT s1) (StringT s2))
+       (s-un (BoolT (string-contains? (char-vector->string s2) (char-vector->string s1))))]
+      [(list _ (StringT _))
+       (Fail "[ERROR] member: string expected")]
+      [_ (Fail "[ERROR] member: expected string|vector")])))
 
 ; floor
 ; ceiling

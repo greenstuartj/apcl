@@ -576,15 +576,42 @@
        (Fail "[ERROR] member: string expected")]
       [_ (Fail "[ERROR] member: expected string|vector")])))
 
-; floor
-; ceiling
+(: repeat-f core-signature)
+(define (repeat-f ev)
+  (lambda (tl ic e)
+    (match tl
+      [(list f (NumberT n) x)
+       (if (not (integer? n))
+           (Fail "[ERROR] repeat: integer expected")
+           (let loop ([i : Integer 0]
+                      [acc : (AST Type) (Unary x (Nil))])
+             (cond
+               [(>= i n) (Ok acc)]
+               [else (match (ev (Unary f acc) ic e)
+                       [(Fail y) (Fail y)]
+                       [(Ok y) (loop (add1 i) y)])])))]
+      [_ (Fail "[ERROR] repeat: integer expected")])))
+
+(: floor-f core-signature)
+(define (floor-f ev)
+  (lambda (tl ic e)
+    (match tl
+      [(list (NumberT n)) (s-un (NumberT (inexact->exact (floor n))))]
+      [_ (Fail "[ERROR] floor: number expected")])))
+
+(: ceiling-f core-signature)
+(define (ceiling-f ev)
+  (lambda (tl ic e)
+    (match tl
+      [(list (NumberT n)) (s-un (NumberT (inexact->exact (ceiling n))))]
+      [_ (Fail "[ERROR] ceiling: number expected")])))
+
 ; get-many
 ; seq
 ; filter
 ; group_n
 ; read_dsv
 ; read-lines
-; repeat
 ; while
 ; rotate
 ; string_split (maybe just split and work on string|vector)
@@ -618,4 +645,7 @@
    "scan_n" (list 3 scan-n-f)
    "zip" (list 2 zip-f)
    "zip_with" (list 3 zip-with-f)
-   "member" (list 2 member-f)))
+   "member" (list 2 member-f)
+   "repeat" (list 3 repeat-f)
+   "floor" (list 1 floor-f)
+   "ceiling" (list 1 ceiling-f)))

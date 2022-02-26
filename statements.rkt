@@ -71,20 +71,33 @@
      (Ok #t)]
     [(list (Definiton name body) (Environment inputs defs depends))
      (cond
-       [(not (hash-ref inputs name #f))
+       [(and (not (hash-ref inputs name #f))
+             (not (hash-ref defs name #f)))
         (hash-set! defs name (Def (Nil) #t body))
+        (let loop ([deps : (Listof String) ((depends-ast depends-type) body)])
+          (cond
+            [(null? deps) (void)]
+            [else (let ([known-deps : (U (Setof String) #f)
+                                    (hash-ref depends (car deps) #f)])
+                    (if known-deps
+                        (hash-set! depends (car deps) (set-add known-deps name))
+                        (hash-set! depends (car deps) (set name))))
+                  (loop (cdr deps))]))
         (Ok #t)]
+       [(and (not (hash-ref inputs name #f))
+             (hash-ref defs name #f))
+        (Fail "[ERROR] definition already exists as non-input")]
        [else
-          (let ([result (eval-ast body (hash) (Environment inputs defs depends))])
-            (match result
-              [(Fail x) (Fail x)]
-              [(Ok x)
-               (hash-set! defs name (Def x #f x))
-               (let loop ([keys (hash-keys defs)])
-                 (cond
-                   [(null? keys) (Ok #t)]
-                   [else (set-Def-recalc! (hash-ref (Environment-defs e) (car keys)) #t)
-                         (loop (cdr keys))]))]))])]))
+        (let ([result (eval-ast body (hash) (Environment inputs defs depends))])
+          (match result
+            [(Fail x) (Fail x)]
+            [(Ok x)
+             (hash-set! defs name (Def x #f x))
+             (let loop ([keys (get-dependants name depends)])
+               (cond
+                 [(null? keys) (Ok #t)]
+                 [else (set-Def-recalc! (hash-ref (Environment-defs e) (car keys)) #t)
+                       (loop (cdr keys))]))]))])]))
 
 (: build-top-level (-> (Listof (Either Statement String)) (Environment Type)
                        (Either True String)))

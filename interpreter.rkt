@@ -30,8 +30,9 @@
   (match (lex (string->list source) 1)
     [(Fail x) (Fail x)]
     [(Ok x) (match (parse-statement x)
-              [(Ok s) (add-statement s environment)
-                      (Ok "")]
+              [(Ok s) (match (add-statement s environment)
+                        [(Fail x) (Fail x)]
+                        [_ (Ok "")])]
               [(Fail _) (match (parse x)
                           [(Fail x) (Fail x)]
                           [(Ok x) (match (eval-ast x (hash) environment)

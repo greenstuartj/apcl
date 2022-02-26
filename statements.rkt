@@ -61,6 +61,12 @@
 (: add-statement (-> Statement (Environment Type)
                      (Either True String)))
 (define (add-statement s e)
+  (: ast-is-function? (-> (AST Type) Boolean))
+  (define (ast-is-function? ast)
+    (match ast
+      [(Unary (LambdaT (list) _ _) _) #f]
+      [(Unary (LambdaT _ _ _) _) #t]
+      [_ #f]))
   (match (list s e)
     [(list (Input name) (Environment inputs defs depends))
      (hash-set! inputs name #t)
@@ -72,7 +78,8 @@
     [(list (Definiton name body) (Environment inputs defs depends))
      (cond
        [(and (not (hash-ref inputs name #f))
-             (not (hash-ref defs name #f)))
+             (or (not (hash-ref defs name #f))
+                 (ast-is-function? body)))
         (hash-set! defs name (Def (Nil) #t body))
         (let loop ([deps : (Listof String) ((depends-ast depends-type) body)])
           (cond

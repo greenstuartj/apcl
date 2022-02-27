@@ -415,6 +415,10 @@
         (- len (abs n))))
   (lambda (tl ic e)
     (match tl
+      [(list (NoneT) _)
+       (s-un (NoneT))]
+      [(list (OptionT) _)
+       (s-un (OptionT))]
       [(list (NumberT n) vs)
        (cond
          [(not (integer? n))
@@ -766,6 +770,8 @@
 ; intersection
 ; without
 ; union (or just & ?)
+; uppercase
+; lowercase
 
 (: core-table (Immutable-HashTable String (List Integer core-signature)))
 (define core-table

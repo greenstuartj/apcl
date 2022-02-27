@@ -676,12 +676,55 @@
                                  (loop (add1 i))])]))))]
       [_ (Fail "[ERROR] seq: integer expected")])))
 
+(: while-f core-signature)
+(define (while-f ev)
+  (lambda (tl ic e)
+    (match tl
+      [(list cf f start)
+       (let loop ([acc : (AST Type) (Unary start (Nil))])
+         (match (ev (Unary cf acc) ic e)
+           [(Fail x) (Fail x)]
+           [(Ok (Unary (BoolT #f) _)) (Ok acc)]
+           [_ (match (ev (Unary f acc) ic e)
+                [(Fail x) (Fail x)]
+                [(Ok x) (loop x)])]))])))
+
+(: rotate-f core-signature)
+(define (rotate-f ev)
+  (: calc-index (-> Integer Integer Integer Integer))
+  (define (calc-index i n vl)
+    (modulo (+ i n) vl))
+  (: f (All (a) (-> Real (Mutable-Vectorof a) a (Either (Mutable-Vectorof a) String))))
+  (define (f n v d)
+    (if (not (integer? n))
+        (Fail "[ERROR] rotate: integer expected")
+        (let ([nv : (Mutable-Vectorof a)
+                  (make-vector (vector-length v) d)])
+          (let loop ([i : Integer 0])
+            (cond
+              [(>= i (vector-length nv)) (Ok nv)]
+              [else (vector-set! nv i (vector-ref v (calc-index i
+                                                                (cast n Integer)
+                                                                (vector-length nv))))
+                    (loop (add1 i))])))))
+  (lambda (tl ic e)
+    (match tl
+      [(list (NumberT n) (VectorT v))
+       (match (f n v (Nil))
+         [(Fail x) (Fail x)]
+         [(Ok x) (s-un (VectorT x))])]
+      [(list (NumberT n) (StringT s))
+       (match (f n s #\0)
+         [(Fail x) (Fail x)]
+         [(Ok x) (s-un (StringT x))])]
+      [(list (NumberT _) _)
+       (Fail "[ERROR] rotate: string|vector expected")]
+      [_ (Fail "[ERROR] rotate: integer expected")])))
+
 ; get-many
 ; filter
 ; group_n
 ; slice
-; while
-; rotate
 ; string_split (maybe just split and work on string|vector)
 ; string_to_number
 ; string_to_list
@@ -719,4 +762,6 @@
    "repeat" (list 3 repeat-f)
    "floor" (list 1 floor-f)
    "ceiling" (list 1 ceiling-f)
-   "seq" (list 3 seq-f)))
+   "seq" (list 3 seq-f)
+   "while" (list 3 while-f)
+   "rotate" (list 2 rotate-f)))

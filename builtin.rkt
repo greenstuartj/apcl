@@ -721,15 +721,44 @@
        (Fail "[ERROR] rotate: string|vector expected")]
       [_ (Fail "[ERROR] rotate: integer expected")])))
 
+(: string-to-vector-f core-signature)
+(define (string-to-vector-f ev)
+  (lambda (tl ic e)
+    (match tl
+      [(list (StringT s))
+       (s-un (VectorT (vector-map (lambda ([c : Char])
+                                    (Unary (StringT (vector c)) (Nil)))
+                                  s)))]
+      [_ (Fail "[ERROR] string_to_vector: string expected")])))
+
+(: index-f core-signature)
+(define (index-f ev)
+  (: f (All (a) (-> a (Mutable-Vectorof a) (Either (AST Type) String))))
+  (define (f elem v)
+    (let loop ([i : Integer 0]
+               [acc : (Listof (AST Type)) '()])
+      (cond
+        [(>= i (vector-length v)) (s-un (VectorT (list->vector (reverse acc))))]
+        [else (if (equal? elem (vector-ref v i))
+                  (loop (add1 i) (cons (Unary (NumberT i) (Nil)) acc))
+                  (loop (add1 i) acc))])))
+  (lambda (tl ic e)
+    (match tl
+      [(list elem (VectorT v))
+       (f (Unary elem (Nil)) v)]
+      [(list (StringT elem) (StringT s))
+       (if (> (vector-length elem) 1)
+           (Fail "[ERROR] index: expected 1 char string")
+           (f (vector-ref elem 0) s))]
+      [_ (Fail "[ERROR] index: string|vector expected")])))
+
 ; get-many
 ; filter
 ; group_n
 ; slice
 ; string_split (maybe just split and work on string|vector)
 ; string_to_number
-; string_to_list
 ; amend (and amend_mutate?)
-; index
 ; index_where
 ; push (or diff name, like & but will promote to list)
 ; key
@@ -764,4 +793,6 @@
    "ceiling" (list 1 ceiling-f)
    "seq" (list 3 seq-f)
    "while" (list 3 while-f)
-   "rotate" (list 2 rotate-f)))
+   "rotate" (list 2 rotate-f)
+   "string_to_vector" (list 1 string-to-vector-f)
+   "index" (list 2 index-f)))

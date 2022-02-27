@@ -361,26 +361,78 @@
        (read-dsv (list->string (vector->list fn)) #\, #\" #t "read_table")]
       [_ (Fail "[ERROR] read_table: string expected")])))
 
+(: read-dsv-f core-signature)
+(define (read-dsv-f ev)
+  (lambda (tl ic e)
+    (match tl
+      [(list (StringT fn) (StringT sep) (StringT qt))
+       (cond
+         [(> (vector-length sep) 1)
+          (Fail "[ERROR] read_dsv: separator should be 1 char long string")]
+         [(> (vector-length qt) 1)
+          (Fail "[ERROR] read_dsv: quote should be 1 char long string")]
+         [else
+          (read-dsv (list->string (vector->list fn))
+                    (vector-ref sep 0)
+                    (vector-ref qt 0)
+                    #t
+                    "read_dsv")])]
+      [(list (StringT _) (StringT _) _)
+       (Fail "[ERROR] read_dsv: quote should be 1 char long string")]
+      [(list (StringT _) _ (StringT _))
+       (Fail "[ERROR] read_dsv: separator should be 1 char long string")]
+      [_
+       (Fail "[ERROR] read_dsv: filename should be string")])))
+
+(: read-lines-f core-signature)
+(define (read-lines-f ev)
+  (lambda (tl ic e)
+    (match tl
+      [(list (StringT fn))
+       (match (read-dsv (list->string (vector->list fn)) #\newline #\" #f "read-lines")
+         [(Fail x) (Fail x)]
+         [(Ok x)
+          (match x
+            [(Unary (VectorT v) next)
+             (let loop ([i : Integer 0])
+               (cond
+                 [(>= i (vector-length v)) (Ok (Unary (VectorT v) next))]
+                 [else (match (vector-ref v i)
+                         [(Unary (VectorT ve2) r)
+                          (let ([new-unary : (AST Type) (vector-ref ve2 0)])
+                            (vector-set! v i new-unary))
+                          (loop (add1 i))]
+                         [_ (loop (add1 i))])]))]
+            [_ (Ok x)])])]
+      [_ (Fail "[ERROR] read_lines: string expected")])))
+
 (: get-f core-signature)
 (define (get-f ev)
+  (: handle-neg (-> Integer Integer Integer))
+  (define (handle-neg n len)
+    (if (>= n 0)
+        n
+        (- len (abs n))))
   (lambda (tl ic e)
     (match tl
       [(list (NumberT n) vs)
        (cond
          [(not (integer? n))
           (Fail "[ERROR] get: integer expected")]
-         [(< n 0)
-          (s-un (NoneT))]
          [else
           (match vs
             [(VectorT v)
-             (if (>= n (vector-length v))
+             (if (>= (abs n) (vector-length v))
                  (s-un (NoneT))
-                 (Ok (vector-ref v (cast n Integer))))]
+                 (Ok (vector-ref v (handle-neg (cast n Integer)
+                                               (vector-length v)))))]
             [(StringT s)
-             (if (>= n (vector-length s))
+             (if (>= (abs n) (vector-length s))
                  (s-un (NoneT))
-                 (s-un (StringT (vector (vector-ref s (cast n Integer))))))]
+                 (s-un
+                  (StringT (vector
+                            (vector-ref s (handle-neg (cast n Integer)
+                                                      (vector-length s)))))))]
              [_ (Fail "[ERROR] get: string|vector expected")])])]
       [_ (Fail "[ERROR] get: integer expected")])))
 
@@ -606,12 +658,28 @@
       [(list (NumberT n)) (s-un (NumberT (inexact->exact (ceiling n))))]
       [_ (Fail "[ERROR] ceiling: number expected")])))
 
+(: seq-f core-signature)
+(define (seq-f ev)
+  (lambda (tl ic e)
+    (match tl
+      [(list f (NumberT n) start)
+       (if (not (integer? n))
+           (Fail "[ERROR] seq: integer expected")
+           (let ([nv : (Mutable-Vectorof (AST Type))
+                     (make-vector (cast n Integer) (Unary start (Nil)))])
+             (let loop ([i : Integer 1])
+               (cond
+                 [(>= i n) (s-un (VectorT nv))]
+                 [else (match (ev (Unary f (vector-ref nv (sub1 i))) ic e)
+                         [(Fail x) (Fail x)]
+                         [(Ok x) (vector-set! nv i x)
+                                 (loop (add1 i))])]))))]
+      [_ (Fail "[ERROR] seq: integer expected")])))
+
 ; get-many
-; seq
 ; filter
 ; group_n
-; read_dsv
-; read-lines
+; slice
 ; while
 ; rotate
 ; string_split (maybe just split and work on string|vector)
@@ -639,6 +707,8 @@
    "drop" (list 2 drop-f)
    "take" (list 2 take-f)
    "read_table" (list 1 read-table-f)
+   "read_dsv" (list 3 read-dsv-f)
+   "read_lines" (list 1 read-lines-f)
    "length" (list 1 length-f)
    "replicate" (list 2 replicate-f)
    "scan" (list 2 scan-f)
@@ -648,4 +718,5 @@
    "member" (list 2 member-f)
    "repeat" (list 3 repeat-f)
    "floor" (list 1 floor-f)
-   "ceiling" (list 1 ceiling-f)))
+   "ceiling" (list 1 ceiling-f)
+   "seq" (list 3 seq-f)))

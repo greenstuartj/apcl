@@ -33,7 +33,7 @@
   (-> Type
       Type
       (IContext Type)
-      (Environment Type)
+      (Environment Type (AST Type))
       (Either (AST Type) String)))
 
 ; BINOP MATHS FUNCTIONS
@@ -193,11 +193,11 @@
 (define-type core-signature
   (-> (-> (AST Type)
           (IContext Type)
-          (Environment Type)
+          (Environment Type (AST Type))
           (Either (AST Type) String))
       (-> (Listof Type)
           (IContext Type)
-          (Environment Type)
+          (Environment Type (AST Type))
           (Either (AST Type) String))))
 
 ; UNARY

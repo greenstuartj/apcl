@@ -9,23 +9,23 @@
 (require "statements.rkt")
 (provide make-environment make-top-level interpret repl)
 
-(: make-environment (-> (Environment Type)))
+(: make-environment (-> (Environment Type (AST Type))))
 (define (make-environment)
   (Environment
    (ann (make-hash)
-        (Mutable-HashTable String True))
+        (Mutable-HashTable String (Mutable-Vectorof (AST Type))))
    (ann (make-hash)
         (Mutable-HashTable String (Def Type)))
    (ann (make-hash)
         (Mutable-HashTable String (Setof String)))))
 
-(: make-top-level (-> String (Environment Type) (Either True String)))
+(: make-top-level (-> String (Environment Type (AST Type)) (Either True String)))
 (define (make-top-level source environment)
   (match (lex (string->list source) 1)
     [(Fail x) (Fail x)]
     [(Ok x) (build-top-level (parse-top-level x) environment)]))
 
-(: interpret (-> String (Environment Type) (Either String String)))
+(: interpret (-> String (Environment Type (AST Type)) (Either String String)))
 (define (interpret source environment)
   (match (lex (string->list source) 1)
     [(Fail x) (Fail x)]
@@ -41,7 +41,7 @@
                                      (Ok (string-append ((show-ast show-type) ast)
                                                         "\n"))])])])]))
 
-(: repl (-> (Environment Type) Void))
+(: repl (-> (Environment Type (AST Type)) Void))
 (define (repl environment)
   (let loop ()
     (display "   ")

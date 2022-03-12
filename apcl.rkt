@@ -1,5 +1,6 @@
 #lang typed/racket
 (require "types.rkt")
+(require "ast.rkt")
 (require "environment.rkt")
 (require "interpreter.rkt")
 
@@ -9,7 +10,7 @@
                 (if (> (vector-length (current-command-line-arguments)) 0)
                     (file->string (vector-ref (current-command-line-arguments) 0))
                     "")]
-        [env : (Environment Type)
+        [env : (Environment Type (AST Type))
              (make-environment)])
     (make-top-level source env)
     (repl env)))

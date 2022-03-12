@@ -16,8 +16,8 @@
   #:mutable
   #:transparent)
 
-(struct (a) Environment
-  ([inputs : (Mutable-HashTable String True)]
+(struct (a b) Environment
+  ([inputs : (Mutable-HashTable String (Mutable-Vectorof b))]
    [defs : (Mutable-HashTable String (Def a))]
    [depends : (Mutable-HashTable String (Setof String))])
   #:transparent

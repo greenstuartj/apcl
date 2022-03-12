@@ -11,13 +11,14 @@
 
 (define-type Statement
   (U Input
-     Definiton))
+     Definition))
 
 (struct Input
-  ([name : String])
+  ([name : String]
+   [validation-vector : (Mutable-Vectorof (AST Type))])
   #:transparent)
 
-(struct Definiton
+(struct Definition
   ([name : String]
    [body : (AST Type)])
   #:transparent)
@@ -26,15 +27,27 @@
 (define (parse-statement tl)
   (match tl
     [`(,(Token 'input _ _) ,(Token 'identifier name _) . ())
-     (Ok (Input name))]
+     (Ok (Input name (vector)))]
     [`(,(Token 'input _ _) ,(Token 'identifier name _) ,(Token 'semicolon _ _) . ,d)
-     (Ok (Input name))]
+     (Ok (Input name (vector)))]
+    [`(,(Token 'input _ _) ,(Token 'identifier name _) ,(Token 'colon _ _)
+                           ,(Token 'open-square s l) . ,d)
+     (match (parse (cons (Token 'open-square s l) d))
+       [(Fail x) (Fail x)]
+       [(Ok (Unary (LiteralVectorT vv) (Nil)))
+        (Ok (Input name vv))]
+       [(Ok (Unary (LiteralVectorT _) _))
+        (Fail (string-append "[ERROR] invalid expression after validation vector on line "
+                             (format "~a" l)))]
+       [(Ok _)
+        (Fail (string-append "[ERROR] invalid validation vector on line "
+                             (format "~a" l)))])]
     [`(,(Token 'input _ line) . ,d)
      (Fail (string-append "[ERROR] malformed input on line " (format "~a" line)))]
     [`(,(Token 'identifier name line) . ,d)
      (match (parse-lambda d line)
        [(Fail x) (Fail x)]
-       [(Ok x) (Ok (Definiton name x))])]
+       [(Ok x) (Ok (Definition name x))])]
     [_ (Fail "[ERROR] invalid statement")]))
     
 (: split-top-level (-> (Listof Token) (Listof (Listof Token))))
@@ -58,7 +71,35 @@
 (define (parse-top-level tl)
   (map parse-statement (split-top-level tl)))
 
-(: add-statement (-> Statement (Environment Type)
+(: check-input-validity (-> Statement (Environment Type (AST Type))
+                            (Either True String)))
+(define (check-input-validity def env)
+  (match (list def env)
+    [(list (Definition name (Unary (NoneT) (Nil))) _)
+     (Ok #t)]
+    [(list (Definition name body) (Environment inputs _ _))
+     (let [(vv (hash-ref inputs name))]
+       (let loop ([i : Integer 0])
+         (cond
+           [(>= i (vector-length vv)) (Ok #t)]
+           [else (match (eval-ast (append-ast (vector-ref vv i) body)
+                                  (hash)
+                                  env)
+                   [(Fail x)
+                    (Fail (string-append "[ERROR] validation of "
+                                         name
+                                         " failed at validation vector index "
+                                         (format "~a" i)
+                                         " with error {" x "}"))]
+                   [(Ok (Unary (BoolT #f) _))
+                    (Fail (string-append "[ERROR] validation of "
+                                         name
+                                         " failed at validation vector index "
+                                         (format "~a" i)))]
+                   [(Ok _)
+                    (loop (add1 i))])])))]))
+
+(: add-statement (-> Statement (Environment Type (AST Type))
                      (Either True String)))
 (define (add-statement s e)
   (: ast-is-function? (-> (AST Type) Boolean))
@@ -68,14 +109,14 @@
       [(Unary (LambdaT _ _ _) _) #t]
       [_ #f]))
   (match (list s e)
-    [(list (Input name) (Environment inputs defs depends))
-     (hash-set! inputs name #t)
+    [(list (Input name validation-vector) (Environment inputs defs depends))
+     (hash-set! inputs name validation-vector)
      (hash-set! defs
                 name
                 (ann (Def (Nil) #t (Unary (NoneT) (Nil)))
                      (Def Type)))
      (Ok #t)]
-    [(list (Definiton name body) (Environment inputs defs depends))
+    [(list (Definition name body) (Environment inputs defs depends))
      (cond
        [(and (not (hash-ref inputs name #f))
              (or (not (hash-ref defs name #f))
@@ -95,18 +136,21 @@
              (hash-ref defs name #f))
         (Fail "[ERROR] definition already exists as non-input")]
        [else
-        (let ([result (eval-ast body (hash) (Environment inputs defs depends))])
-          (match result
-            [(Fail x) (Fail x)]
-            [(Ok x)
-             (hash-set! defs name (Def x #f x))
-             (let loop ([keys (get-dependants name depends)])
-               (cond
-                 [(null? keys) (Ok #t)]
-                 [else (set-Def-recalc! (hash-ref (Environment-defs e) (car keys)) #t)
-                       (loop (cdr keys))]))]))])]))
+        (match (check-input-validity s e)
+          [(Fail x) (Fail x)]
+          [(Ok _)
+           (let ([result (eval-ast body (hash) (Environment inputs defs depends))])
+             (match result
+               [(Fail x) (Fail x)]
+               [(Ok x)
+                (hash-set! defs name (Def x #f x))
+                (let loop ([keys (get-dependants name depends)])
+                  (cond
+                    [(null? keys) (Ok #t)]
+                    [else (set-Def-recalc! (hash-ref (Environment-defs e) (car keys)) #t)
+                          (loop (cdr keys))]))]))])])]))
 
-(: build-top-level (-> (Listof (Either Statement String)) (Environment Type)
+(: build-top-level (-> (Listof (Either Statement String)) (Environment Type (AST Type))
                        (Either True String)))
 (define (build-top-level sl env)
   (let loop ([s : (Listof (Either Statement String)) sl])

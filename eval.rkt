@@ -16,7 +16,7 @@
     [(list (Binary t _ rhs) _) (collect-types rhs (- n 1) (cons t lst))]))
 
 (: eval-vector
-   (-> (Mutable-Vectorof (AST Type)) (IContext Type) (Environment Type)
+   (-> (Mutable-Vectorof (AST Type)) (IContext Type) (Environment Type (AST Type))
        (Either (Mutable-Vectorof (AST Type)) String)))
 (define (eval-vector v icontext environment)
   (: nv (Mutable-Vectorof (AST Type)))
@@ -41,7 +41,7 @@
 (: eval-ast
    (-> (AST Type)
        (IContext Type)
-       (Environment Type)
+       (Environment Type (AST Type))
        (Either (AST Type) String)))
 (define (eval-ast ast icontext environment)
   (match ast

@@ -89,7 +89,7 @@
    [argl : (Listof Type)]
    [body : (-> (Listof Type)
                (IContext Type)
-               (Environment Type)
+               (Environment Type (AST Type))
                (Either (AST Type) String))])
   #:transparent)
 
@@ -99,7 +99,7 @@
    [body : (-> Type
                Type
                (IContext Type)
-               (Environment Type)
+               (Environment Type (AST Type))
                (Either (AST Type) String))])
   #:transparent)
 

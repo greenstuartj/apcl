@@ -772,6 +772,8 @@
 ; union (or just & ?)
 ; uppercase
 ; lowercase
+; catalogue
+; catalogue_with
 
 (: core-table (Immutable-HashTable String (List Integer core-signature)))
 (define core-table

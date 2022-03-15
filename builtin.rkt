@@ -756,6 +756,63 @@
            (f (vector-ref elem 0) s))]
       [_ (Fail "[ERROR] index: string|vector expected")])))
 
+(: catalogue-f core-signature)
+(define (catalogue-f ev)
+  (lambda (tl ic e)
+    (match tl
+      [(list (VectorT v) (VectorT w))
+       (let ([nv : (Mutable-Vectorof (AST Type))
+                 (make-vector (vector-length v) (Nil))])
+         (let loop ([i : Integer 0]
+                    [j : Integer 0]
+                    [nw : (Mutable-Vectorof (AST Type))
+                        (make-vector (vector-length w) (Nil))])
+           (cond
+             [(>= i (vector-length v)) (s-un (VectorT nv))]
+             [(>= j (vector-length w)) (vector-set! nv i (Unary (VectorT nw) (Nil)))
+                                       (loop (add1 i)
+                                             0
+                                             (make-vector (vector-length w) (Nil)))]
+             [else
+              (let ([c-vec : (Mutable-Vectorof (AST Type))
+                           (vector (vector-ref v i)
+                                   (vector-ref w j))])
+                (vector-set! nw
+                             j
+                             (Unary (VectorT c-vec)
+                                    (Nil)))
+                (loop i (add1 j) nw))])))]
+      [_ (Fail "[ERROR] catalogue: vector expected")])))
+
+(: catalogue-with-f core-signature)
+(define (catalogue-with-f ev)
+  (lambda (tl ic e)
+    (match tl
+      [(list f (VectorT v) (VectorT w))
+       (let ([nv : (Mutable-Vectorof (AST Type))
+                 (make-vector (vector-length v) (Nil))])
+         (let loop ([i : Integer 0]
+                    [j : Integer 0]
+                    [nw : (Mutable-Vectorof (AST Type))
+                        (make-vector (vector-length w) (Nil))])
+           (cond
+             [(>= i (vector-length v)) (s-un (VectorT nv))]
+             [(>= j (vector-length w)) (vector-set! nv i (Unary (VectorT nw) (Nil)))
+                                       (loop (add1 i)
+                                             0
+                                             (make-vector (vector-length w) (Nil)))]
+             [else
+              (match (ev (Unary f
+                                (append-ast (vector-ref v i)
+                                            (vector-ref w j)))
+                         ic
+                         e)
+                [(Fail x) (Fail x)]
+                [(Ok x)
+                 (vector-set! nw j x)
+                 (loop i (add1 j) nw)])])))]
+      [_ (Fail "[ERROR] catalogue_with: vector expected")])))
+
 ; get-many
 ; filter
 ; group_n
@@ -772,8 +829,6 @@
 ; union (or just & ?)
 ; uppercase
 ; lowercase
-; catalogue
-; catalogue_with
 
 (: core-table (Immutable-HashTable String (List Integer core-signature)))
 (define core-table
@@ -803,4 +858,6 @@
    "while" (list 3 while-f)
    "rotate" (list 2 rotate-f)
    "string_to_vector" (list 1 string-to-vector-f)
-   "index" (list 2 index-f)))
+   "index" (list 2 index-f)
+   "catalogue" (list 2 catalogue-f)
+   "catalogue_with" (list 3 catalogue-with-f)))

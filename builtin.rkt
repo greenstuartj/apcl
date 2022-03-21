@@ -813,6 +813,12 @@
                  (loop i (add1 j) nw)])])))]
       [_ (Fail "[ERROR] catalogue_with: vector expected")])))
 
+(: string-f core-signature)
+(define (string-f ev)
+  (lambda (tl ic e)
+    (match tl
+      [(list t) (s-un (StringT (list->vector (string->list (show-type t)))))])))
+
 ; get-many
 ; filter
 ; group_n
@@ -860,4 +866,5 @@
    "string_to_vector" (list 1 string-to-vector-f)
    "index" (list 2 index-f)
    "catalogue" (list 2 catalogue-f)
-   "catalogue_with" (list 3 catalogue-with-f)))
+   "catalogue_with" (list 3 catalogue-with-f)
+   "string" (list 1 string-f)))

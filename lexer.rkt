@@ -25,7 +25,9 @@
      'colon
      'semicolon
      'comma
-     'input))
+     'input
+     'let
+     'in))
 
 (struct Token ([t : TokenType]
                [d : String]
@@ -90,6 +92,8 @@
     ["or"     (Token 'binop s l)]
     ["and"    (Token 'binop s l)]
     ["input"  (Token 'input s l)]
+    ["let"    (Token 'let s l)]
+    ["in"     (Token 'in s l)]
     [_        (Token 'identifier s l)]))
 
 (: other-lex (-> (Listof Char) Integer (Either (Listof Token) String)))

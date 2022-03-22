@@ -139,6 +139,23 @@
               [(list _ (Fail x) _) (Fail x)]
               [(list _ _ (Fail x)) (Fail x)])]))])))
 
+(: parse-let (-> (Listof Token) Integer (Either (AST Type) String)))
+(define (parse-let tl line)
+  (match (depth-take tl 0 'let 'in
+                     (string-append "[ERROR] malformed let starting at line "
+                                    (format "~a" line)))
+    [(Fail x) (Fail x)]
+    [(Ok (list l r))
+     (match (list (parse l) (parse r))
+       [(list (Fail x) _)
+        (Fail x)]
+       [(list _ (Fail x))
+        (Fail x)]
+       [(list (Ok (Unary (LambdaT (list a) ic body) (Nil))) (Ok next))
+        (Ok (Unary (LambdaT (list a) ic next) body))]
+       [_ (Fail (string-append "[ERROR] malformed let starting at line "
+                               (format "~a" line)))])]))
+
 (: collect-args
    (-> (Listof Token) Integer
        (Either (List (Listof String) (Listof Token)) String)))
@@ -209,5 +226,7 @@
      (parse-lambda d line)]
     [`(,(Token 'if _ line) . ,d)
      (parse-if d line)]
+    [`(,(Token 'let _ line) . ,d)
+     (parse-let (cons (Token 'backslash "\\" line) d) line)]
     [`(,(Token _ s line) . ,d)
      (Fail (string-append "[ERROR] Unexpected " s " on line " (format "~a" line)))]))

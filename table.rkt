@@ -12,7 +12,8 @@
      (Unary (NoneT) (Nil))]
     [(not np)
      (Unary (StringT (list->vector cl)) (Nil))]
-    [(not (char-numeric? (car cl)))
+    [(not (or (char-numeric? (car cl))
+              (eq? #\- (car cl))))
      (Unary (StringT (list->vector cl)) (Nil))]
     [else (let ([n (string->number (list->string cl))])
             (if n

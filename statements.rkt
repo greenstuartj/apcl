@@ -144,7 +144,7 @@
                [(Fail x) (Fail x)]
                [(Ok x)
                 (hash-set! defs name (Def x #f x))
-                (let loop ([keys (get-dependants name depends (set))])
+                (let loop ([keys (get-dependants name depends)])
                   (cond
                     [(null? keys) (Ok #t)]
                     [else (set-Def-recalc! (hash-ref (Environment-defs e) (car keys)) #t)

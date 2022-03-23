@@ -23,17 +23,19 @@
   #:transparent
   #:mutable)
 
-(: get-dependants (-> String (Mutable-HashTable String (Setof String))
+(: get-dependants (-> String (Mutable-HashTable String (Setof String)) (Setof String)
                       (Listof String)))
-(define (get-dependants name depends)
-  (let ([deps : (U (Setof String) #f) (hash-ref depends name #f)])
-    (if (not deps)
-        '()
-        (let ([dep-list (set->list deps)])
-          (set->list
-           (list->set
-            (apply append
-                   (cons dep-list
-                         (map (lambda ([n : String]) (get-dependants n depends))
-                              dep-list)))))))))
+(define (get-dependants name depends seen)
+  (if (set-member? seen name)
+      '()
+      (let ([deps : (U (Setof String) #f) (hash-ref depends name #f)])
+        (if (not deps)
+            '()
+            (let ([dep-list (set->list deps)])
+              (set->list
+               (list->set
+                (apply append
+                       (cons dep-list
+                             (map (lambda ([n : String]) (get-dependants n depends (set-add seen n)))
+                                  dep-list))))))))))
                 

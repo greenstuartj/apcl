@@ -78,6 +78,9 @@
        (match (list nb next2)
          [(list (Fail x) _) (Fail x)]
          [(list _ (Fail y)) (Fail y)]
+         [(list (Ok (Unary (LambdaT args nic2 body) (Nil))) (Ok y))
+          (eval-ast (append-ast (Unary (LambdaT args nic body) (Nil)) y)
+                    icontext environment)]
          [(list (Ok x) (Ok y))
           (eval-ast (append-ast x y) icontext environment)]))]
     [(Unary (LambdaT args nic body) (Nil))
@@ -181,8 +184,6 @@
           (eval-ast (Unary (BinopT l r b) next) icontext environment)]
          [_
           (Fail "[ERROR] multi-value expression on left side of infix operator")]))]
-    ; vector eval could cause slow runtime if done often on long vectors
-    ; bool field in struct to track if evaluated?
     [(Unary (LiteralVectorT v) next)
      (let ([nv (eval-vector v icontext environment)])
        (let ([next2 (eval-ast next icontext environment)])

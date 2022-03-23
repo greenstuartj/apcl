@@ -819,6 +819,116 @@
     (match tl
       [(list t) (s-un (StringT (list->vector (string->list (show-type t)))))])))
 
+(: transpose-f core-signature)
+(define (transpose-f ev)
+  (lambda (tl ic e)
+    (let ([ast
+           (Unary
+            (LambdaT
+             '("tbl")
+             '#hash()
+             (Unary
+              (GroupT
+               (Unary
+                (IdentifierT "map")
+                (Unary
+                 (GroupT
+                  (Unary
+                   (LambdaT
+                    '("i")
+                    '#hash()
+                    (Unary
+                     (GroupT
+                      (Unary
+                       (IdentifierT "map")
+                       (Unary
+                        (GroupT (Unary (IdentifierT "get")
+                                       (Unary (IdentifierT "i") (Nil))))
+                        (Nil))))
+                     (Unary (IdentifierT "tbl") (Nil))))
+                   (Nil)))
+                 (Nil))))
+              (Unary
+               (IdentifierT "iota")
+               (Unary
+                (IdentifierT "length")
+                (Unary (IdentifierT "get")
+                       (Unary (NumberT 0) (Unary (IdentifierT "tbl") (Nil))))))))
+            (Nil))])
+      (match tl
+        [(list tbl)
+         (ev (append-ast ast (Unary tbl (Nil))) ic e)]))))
+
+(: show-table-f core-signature)
+(define (show-table-f ev)
+  (lambda (tl ic e)
+    (let ([ast
+           (Unary
+            (LambdaT
+             '("tbl")
+             '#hash()
+             (Unary
+              (GroupT
+               (Unary
+                (IdentifierT "reduce")
+                (Unary
+                 (GroupT
+                  (Unary
+                   (LambdaT
+                    '("v" "a")
+                    '#hash()
+                    (Binary
+                     (BinopT #f #f concat-f)
+                     (Unary
+                      (GroupT (Unary (IdentifierT "string")
+                                     (Unary (IdentifierT "v") (Nil))))
+                      (Nil))
+                     (Binary
+                      (BinopT #f #f concat-f)
+                      (Unary (StringT (vector #\newline)) (Nil))
+                      (Unary
+                       (GroupT (Unary (IdentifierT "string")
+                                      (Unary (IdentifierT "a") (Nil))))
+                       (Nil)))))
+                   (Nil)))
+                 (Nil))))
+              (Unary
+               (GroupT
+                (Unary
+                 (IdentifierT "map")
+                 (Unary
+                  (GroupT
+                   (Unary
+                    (IdentifierT "reduce")
+                    (Unary
+                     (GroupT
+                      (Unary
+                       (LambdaT
+                        '("v" "a")
+                        '#hash()
+                        (Binary
+                         (BinopT #f #f concat-f)
+                         (Unary
+                          (GroupT (Unary (IdentifierT "string")
+                                         (Unary (IdentifierT "v") (Nil))))
+                          (Nil))
+                         (Binary
+                          (BinopT #f #f concat-f)
+                          (Unary (StringT (vector #\tab)) (Nil))
+                          (Unary
+                           (GroupT (Unary (IdentifierT "string")
+                                          (Unary (IdentifierT "a") (Nil))))
+                           (Nil)))))
+                       (Nil)))
+                     (Nil))))
+                  (Nil))))
+               (Unary (IdentifierT "transpose")
+                      (Unary (IdentifierT "tbl") (Nil))))))
+            (Nil))])
+      (match tl
+        [(list tbl)
+         (ev (append-ast ast (Unary tbl (Nil))) ic e)]))))
+
 ; get-many
 ; filter
 ; group_n
@@ -867,4 +977,6 @@
    "index" (list 2 index-f)
    "catalogue" (list 2 catalogue-f)
    "catalogue_with" (list 3 catalogue-with-f)
-   "string" (list 1 string-f)))
+   "string" (list 1 string-f)
+   "transpose" (list 1 transpose-f)
+   "show_table" (list 1 show-table-f)))

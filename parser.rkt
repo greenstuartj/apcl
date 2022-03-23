@@ -82,7 +82,6 @@
          [(Ok x)
           (tree (GroupT x) tld)]))]))
 
-;; TODO: clean, and fix nesting
 (: parse-vector
    (-> (Listof Token) Integer
        (Either (List (Listof (AST Type)) (Listof Token)) String)))

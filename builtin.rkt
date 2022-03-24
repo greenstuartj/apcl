@@ -929,8 +929,31 @@
         [(list tbl)
          (ev (append-ast ast (Unary tbl (Nil))) ic e)]))))
 
+(: filter-f core-signature)
+(define (filter-f ev)
+  (lambda (tl ic e)
+    (let ([ast
+           (Unary
+            (LambdaT
+             '("p" "v")
+             '#hash()
+             (Unary
+              (IdentifierT "replicate")
+              (Unary
+               (GroupT (Unary (IdentifierT "map")
+                              (Unary (IdentifierT "p")
+                                     (Nil))))
+               (Unary (IdentifierT "v")
+                      (Unary (IdentifierT "v")
+                             (Nil))))))
+            (Nil))])
+      (match tl
+        [(list p v)
+         (ev (append-ast (Unary (GroupT (append-ast ast (Unary p (Nil)))) (Nil))
+                         (Unary v (Nil)))
+             ic e)]))))
+
 ; get-many
-; filter
 ; group_n
 ; slice
 ; string_split (maybe just split and work on string|vector)
@@ -979,4 +1002,5 @@
    "catalogue_with" (list 3 catalogue-with-f)
    "string" (list 1 string-f)
    "transpose" (list 1 transpose-f)
-   "show_table" (list 1 show-table-f)))
+   "show_table" (list 1 show-table-f)
+   "filter" (list 2 filter-f)))

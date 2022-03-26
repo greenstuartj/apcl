@@ -124,6 +124,14 @@
             (loop (string-append ns (vector-ref sv i) ", ") (add1 i))])))]
     [(NoneT) "none"]
     [(OptionT) "option"]
+    [(LambdaT args ic body)
+     (string-append "(\\"
+                    (string-join args)
+                    ": "
+                    ((show-ast show-type) body)
+                    ")")]
+    [(BinopT _ _ _) "<op>"]
+    [(BuiltinT _ _ _) "<core>"]
     [_ "not implemented"]))
 
 (: depends-type (-> Type (Listof String)))

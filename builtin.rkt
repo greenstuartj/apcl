@@ -550,7 +550,7 @@
                      (make-vector (- (vector-length v) (sub1 m)) (Nil))])
             (let loop ([i : Integer 0])
               (cond
-                [(> (+ i m) (add1 (vector-length nv))) (s-un (VectorT nv))]
+                [(> (+ i m) (vector-length v)) (s-un (VectorT nv))]
                 [else
                  (let ([tv : (Mutable-Vectorof (AST Type))
                            (make-vector m (Nil))])

@@ -105,6 +105,17 @@
 
 (: show-type (-> Type String))
 (define (show-type t)
+  (: show-vector (-> (Mutable-Vectorof (AST Type)) String))
+  (define (show-vector v)
+    (let ([sv (vector-map (show-ast show-type) v)])
+      (let loop ([ns : String "["]
+                  [i : Integer 0])
+         (cond
+           [(>= i (vector-length sv)) (string-append ns "]")]
+           [(= i (sub1 (vector-length sv)))
+            (string-append ns (vector-ref sv i) "]")]
+           [else
+            (loop (string-append ns (vector-ref sv i) ", ") (add1 i))]))))
   (match t
     [(IdentifierT name) name]
     [(NumberT n)
@@ -112,18 +123,23 @@
     [(BoolT #t) "true"]
     [(BoolT #f) "false"]
     [(StringT s) (list->string (vector->list s))]
+    [(LiteralVectorT v)
+     (show-vector v)]
     [(VectorT v)
-     (let ([sv (vector-map (show-ast show-type) v)])
-       (let loop ([ns : String "["]
-                  [i : Integer 0])
-         (cond
-           [(>= i (vector-length sv)) (string-append ns "]")]
-           [(= i (sub1 (vector-length sv)))
-            (string-append ns (vector-ref sv i) "]")]
-           [else
-            (loop (string-append ns (vector-ref sv i) ", ") (add1 i))])))]
+     (show-vector v)]
     [(NoneT) "none"]
     [(OptionT) "option"]
+    [(GroupT g)
+     (string-append "("
+                    ((show-ast show-type) g)
+                    ")")]
+    [(IfT test vrai faux)
+     (string-append "if "
+                    ((show-ast show-type) test)
+                    " then "
+                    ((show-ast show-type) vrai)
+                    " else "
+                    ((show-ast show-type) test))]
     [(LambdaT args ic body)
      (string-append "(\\"
                     (string-join args)

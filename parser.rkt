@@ -6,12 +6,36 @@
 (require "ast.rkt")
 (require "builtin.rkt")
 (require "eval.rkt")
-(provide parse parse-lambda)
+(provide parse parse-lambda depth-take)
+
+(: bury-ref (-> (AST Type) (AST Type)))
+(define (bury-ref b)
+  (match b
+    [(Unary t next) (Binary (RefT #f #f) (Nil) b)]
+    [(Binary b2 (Nil) y) (Binary (RefT #f #f) (Nil) y)]
+    [(Binary b2 x y) (Binary (RefT #f #f) (bury-ref x) y)]))
+
+;; TODO: fix x->1->2->3
+(: add-to-ref-left (-> Type (AST Type) (AST Type)))
+(define (add-to-ref-left t r)
+  (match r
+    [(Binary (RefT _ _) (Nil) y)
+     (Binary (RefT #f #f) (Unary t (Nil)) y)]
+    [(Binary (RefT _ _) x y)
+     (Binary (RefT #f #f) (add-to-ref-left t x) y)]))
 
 (: tree (-> Type (Listof Token) (Either (AST Type) String)))
 (define (tree t tl)
   (let ([result (parse tl)])
     (match result
+      [(Ok (Binary (RefT #f #f) (Nil) y))
+       (Ok (Binary (RefT #f #f) (Unary t (Nil)) y))]
+      [(Ok (Binary (RefT #f #f) x y))
+       (match t
+         [(RefT _ _)
+          (Ok (Binary (RefT #f #f) (bury-ref x) y))]
+         [_
+          (Ok (Binary (RefT #f #f) (add-to-ref-left t x) y))])]
       [(Ok (Binary b (Nil) y))
        (match t
          [(BinopT _ _ _) (Ok (Binary t (Nil) (Binary b (Nil) y)))]
@@ -22,6 +46,7 @@
          [_ (Ok (Unary t (Binary b x y)))])]
       [(Ok ast)
        (match t
+         [(RefT _ _) (Ok (Binary t (Nil) ast))]
          [(BinopT _ _ _) (Ok (Binary t (Nil) ast))]
          [_ (Ok (Unary t ast))])]
       [(Fail x) (Fail x)])))
@@ -45,7 +70,8 @@
     [">="  (BinopT #f #f ge)]
     ["or"  (BinopT #f #f or-f)]
     ["and" (BinopT #f #f and-f)]
-    ["&"   (BinopT #f #f concat-f)]))
+    ["&"   (BinopT #f #f concat-f)]
+    ["->"  (RefT #f #f)]))
 
 (: depth-take
    (-> (Listof Token) Integer TokenType TokenType String
@@ -81,6 +107,17 @@
          [(Fail x) (Fail x)]
          [(Ok x)
           (tree (GroupT x) tld)]))]))
+
+(: parse-module
+   (-> (Listof Token) Integer
+       (Either (AST Type) String)))
+(define (parse-module tl line)
+  (match (depth-take tl 0 'open-curl 'close-curl
+                     (string-append "[ERROR] unmatched { on line "
+                                    (format "~a" line)))
+    [(Fail x) (Fail x)]
+    [(Ok (list m-tl tld))
+     (tree (LiteralModuleT m-tl) tld)]))
 
 (: parse-vector
    (-> (Listof Token) Integer
@@ -214,6 +251,8 @@
      (tree (OptionT) d)]
     [`(,(Token 'binop s _) . ,d)
      (tree (binop s) d)]
+    [`(,(Token 'right-arrow s _) . ,d)
+     (tree (binop s) d)]
     [`(,(Token 'open-square _ line) . ,d)
      (let ([result (parse-vector d line)])
        (match result
@@ -221,6 +260,8 @@
          [(Fail x) (Fail x)]))]
     [`(,(Token 'open-paren _ line) . ,d)
      (parse-group d line)]
+    [`(,(Token 'open-curl _ line) . ,d)
+     (parse-module d line)]
     [`(,(Token 'backslash _ line) . ,d)
      (parse-lambda d line)]
     [`(,(Token 'if _ line) . ,d)

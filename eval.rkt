@@ -135,6 +135,36 @@
           (eval-ast (append-ast f next) icontext environment)]
          [_
           (eval-ast (append-ast t next) icontext environment)]))]
+    ; TODO: modules
+    [(Binary (RefT #f #f) lhs rhs)
+     (let ([left (eval-ast lhs icontext environment)])
+       (match left
+         [(Ok (Unary (ModuleT e) (Nil)))
+          (match rhs
+            [(Unary (IdentifierT name) next)
+             (match (eval-ast (Unary (IdentifierT name) (Nil)) icontext e)
+               [(Fail x) (Fail x)]
+               [(Ok x)
+                (eval-ast (append-ast x next) icontext environment)])]
+            [_
+             (Fail "[ERROR] expected identifier when referencing in a module")])]
+         [_
+          (let ([right (eval-ast rhs icontext environment)])
+            (match (list left right)
+              [(list (Fail l) _) (Fail l)]
+              [(list _ (Fail r)) (Fail r)]
+              [(list (Ok (Unary l (Nil))) (Ok (Unary r (Nil))))
+               (eval-ast (Unary (RefT l r) (Nil)) icontext environment)]))]))]
+    [(Unary (RefT x y) next)
+     (match (list x y)
+       [(list (VectorT v) (NumberT n))
+        (if (integer? n)
+            (eval-ast (append-ast (vector-ref v (cast n Integer)) next)
+                      icontext environment)
+            (Fail "[ERROR] integer expected when referencing vector"))]
+       [_
+        (displayln (list x y))
+        (Fail "[ERROR] reference type mismatch")])]
     [(Unary (BinopT #f #f b) next)
      (let ([next2 (eval-ast next icontext environment)])
        (match next2

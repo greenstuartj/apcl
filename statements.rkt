@@ -7,11 +7,12 @@
 (require "parser.rkt")
 (require "environment.rkt")
 (require "eval.rkt")
-(provide parse-statement parse-top-level add-statement build-top-level)
+(provide parse-statement parse-top-level add-statement build-top-level make-environment)
 
 (define-type Statement
   (U Input
-     Definition))
+     Definition
+     Import))
 
 (struct Input
   ([name : String]
@@ -21,6 +22,11 @@
 (struct Definition
   ([name : String]
    [body : (AST Type)])
+  #:transparent)
+
+(struct Import
+  ([filename : String]
+   [alias : (Option String)])
   #:transparent)
 
 (: parse-statement (-> (Listof Token) (Either Statement String)))
@@ -44,9 +50,33 @@
                              (format "~a" l)))])]
     [`(,(Token 'input _ line) . ,d)
      (Fail (string-append "[ERROR] malformed input on line " (format "~a" line)))]
+    [`(,(Token 'import _ line) ,(Token 'string filename _) . ())
+     (Ok (Import filename #f))]
+    [`(,(Token 'import _ line) ,(Token 'string filename _) ,(Token 'semicolon _ _) . ,d)
+     (Ok (Import filename #f))]
+    [`(,(Token 'import _ line) ,(Token 'string filename _)
+                               ,(Token 'as _ _) ,(Token 'identifier alias _) . ())
+     (Ok (Import filename alias))]
+    [`(,(Token 'import _ line) ,(Token 'string filename _)
+                               ,(Token 'as _ _) ,(Token 'identifier alias _)
+                               ,(Token 'semicolon _ _) . ,d)
+     (Ok (Import filename alias))]
+    [`(,(Token 'import _ line) . _)
+     (Fail (string-append "[ERROR] malformed input on line " (format "~a" line)))]
     [`(,(Token 'identifier name line) . ,d)
      (match (parse-lambda d line)
        [(Fail x) (Fail x)]
+       [(Ok (Unary (LambdaT args ic (Unary (LiteralModuleT mts) (Nil))) (Nil)))
+        (let ([env (make-environment)])
+          (match (build-top-level (parse-top-level mts) env)
+            [(Fail x) (Fail x)]
+            [(Ok _)
+             (Ok (Definition name
+                   (Unary (LambdaT args
+                                   ic
+                                   (Unary (ModuleT env)
+                                          (Nil)))
+                          (Nil))))]))]
        [(Ok x) (Ok (Definition name x))])]
     [_ (Fail "[ERROR] invalid statement")]))
     
@@ -60,6 +90,19 @@
        (if (null? temp)
            (reverse acc)
            (reverse (cons (reverse temp) acc)))]
+      [`(,(Token 'open-curl s l) . ,d)
+       (match (depth-take d 0 'open-curl 'close-curl
+                          (string-append "[ERROR] unmatched { on line "
+                                         (format "~a" l)))
+         [(Fail _) (loop '() (append (reverse (cons (Token 'open-curl s l) d)) temp) acc)]
+         [(Ok (list m-tl tld))
+          (loop tld
+                (append
+                 (reverse (append (list (Token 'open-curl s l))
+                                  m-tl
+                                  (list (Token 'close-curl "}" l))))
+                 temp)
+                acc)])]
       [`(,(Token 'semicolon _ _) . ,d)
        (if (null? temp)
            (loop d '() acc)
@@ -116,6 +159,32 @@
                 (ann (Def (Nil) #t (Unary (NoneT) (Nil)))
                      (Def Type)))
      (Ok #t)]
+    [(list (Import filename #f) env)
+     (if (not (file-exists? filename))
+         (Fail (string-append "[ERROR] "
+                              filename
+                              " does not exist"))
+         (match (lex (string->list (file->string filename)) 1)
+           [(Fail x) (Fail x)]
+           [(Ok x)
+            (build-top-level (parse-top-level x) env)]))]
+    [(list (Import filename alias) env)
+     (assert alias) ; not false due to above match condition
+     (if (not (file-exists? filename))
+         (Fail (string-append "[ERROR] "
+                              filename
+                              " does not exist"))
+         (match (lex (string->list (file->string filename)) 1)
+           [(Fail x) (Fail x)]
+           [(Ok x)
+            (let ([e (make-environment)])
+              (match (build-top-level (parse-top-level x) e)
+                [(Fail x) (Fail x)]
+                [(Ok _)
+                 (add-statement (Definition alias
+                                  (Unary (LambdaT '() (hash) (Unary (ModuleT e) (Nil)))
+                                         (Nil)))
+                                env)]))]))]
     [(list (Definition name body) (Environment inputs defs depends))
      (cond
        [(and (not (hash-ref inputs name #f))
@@ -134,7 +203,7 @@
         (Ok #t)]
        [(and (not (hash-ref inputs name #f))
              (hash-ref defs name #f))
-        (Fail "[ERROR] definition already exists as non-input")]
+        (Fail (format "[ERROR] definition of '~a' already exists as non-input" name))]
        [else
         (match (check-input-validity s e)
           [(Fail x) (Fail x)]
@@ -161,3 +230,13 @@
        (match (add-statement statement env)
          [(Fail z) (Fail z)]
          [(Ok _) (loop d)])])))
+
+(: make-environment (-> (Environment Type (AST Type))))
+(define (make-environment)
+  (Environment
+   (ann (make-hash)
+        (Mutable-HashTable String (Mutable-Vectorof (AST Type))))
+   (ann (make-hash)
+        (Mutable-HashTable String (Def Type)))
+   (ann (make-hash)
+        (Mutable-HashTable String (Setof String)))))

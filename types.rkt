@@ -1,4 +1,5 @@
 #lang typed/racket
+(require "lexer.rkt")
 (require "ast.rkt")
 (require "either.rkt")
 (require "environment.rkt")
@@ -16,6 +17,9 @@
          LambdaT
          BuiltinT
          BinopT
+         RefT
+         LiteralModuleT
+         ModuleT
 
          show-type
          depends-type)
@@ -33,7 +37,10 @@
      GroupT
      LambdaT
      BuiltinT
-     BinopT))
+     BinopT
+     RefT
+     LiteralModuleT
+     ModuleT))
 
 (struct IdentifierT
   ([n : String])
@@ -103,6 +110,19 @@
                (Either (AST Type) String))])
   #:transparent)
 
+(struct RefT
+  ([structure : (Option Type)]
+   [position  : (Option Type)])
+  #:transparent)
+
+(struct LiteralModuleT
+  ([tokens : (Listof Token)])
+  #:transparent)
+
+(struct ModuleT
+  ([env : (Environment Type (AST Type))])
+  #:transparent)
+
 (: show-type (-> Type String))
 (define (show-type t)
   (: show-vector (-> (Mutable-Vectorof (AST Type)) String))
@@ -148,6 +168,7 @@
                     ")")]
     [(BinopT _ _ _) "<op>"]
     [(BuiltinT _ _ _) "<core>"]
+    [(RefT _ _) "->"]
     [_ "not implemented"]))
 
 (: depends-type (-> Type (Listof String)))

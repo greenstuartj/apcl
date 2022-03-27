@@ -22,12 +22,17 @@
      'close-paren
      'open-square
      'close-square
+     'open-curl
+     'close-curl
      'colon
      'semicolon
      'comma
      'input
      'let
-     'in))
+     'in
+     'import
+     'as
+     'right-arrow))
 
 (struct Token ([t : TokenType]
                [d : String]
@@ -94,6 +99,8 @@
     ["input"  (Token 'input s l)]
     ["let"    (Token 'let s l)]
     ["in"     (Token 'in s l)]
+    ["import" (Token 'import s l)]
+    ["as"     (Token 'as s l)]
     [_        (Token 'identifier s l)]))
 
 (: other-lex (-> (Listof Char) Integer (Either (Listof Token) String)))
@@ -139,6 +146,10 @@
      (cons-lex 'open-square "[" d line)]
     [`(#\] . ,d)
      (cons-lex 'close-square "]" d line)]
+    [`(#\{ . ,d)
+     (cons-lex 'open-curl "{" d line)]
+    [`(#\} . ,d)
+     (cons-lex 'close-curl "}" d line)]
     [`(#\: . ,d)
      (cons-lex 'colon ":" d line)]
     [`(#\; . ,d)
@@ -147,6 +158,8 @@
      (cons-lex 'comma "," d line)]
     [`(#\+ . ,d)
      (cons-lex 'binop "+" d line)]
+    [`(#\- #\> . ,d)
+     (cons-lex 'right-arrow "->" d line)]
     [`(#\- . ,d)
      (cons-lex 'binop "-" d line)]
     [`(#\* . ,d)

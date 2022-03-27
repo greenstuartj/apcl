@@ -26,14 +26,22 @@
 (: get-dependants (-> String (Mutable-HashTable String (Setof String))
                       (Listof String)))
 (define (get-dependants name depends)
-  (let ([deps : (U (Setof String) #f) (hash-ref depends name #f)])
-    (if (not deps)
-        '()
-        (let ([dep-list (set->list deps)])
-          (set->list
-           (list->set
-            (apply append
-                   (cons dep-list
-                         (map (lambda ([n : String]) (get-dependants n depends))
-                              dep-list)))))))))
-                
+  (: seen (Mutable-HashTable String True))
+  (define seen (make-hash))
+  (: aux (-> String (Listof String)))
+  (define (aux n)
+    (hash-set! seen n #t)
+    (let ([deps : (U (Setof String) #f) (hash-ref depends n #f)])
+      (if (not deps)
+          '()
+          (let ([dep-list (set->list deps)])
+            (set->list
+             (set-remove
+              (list->set
+               (apply append
+                      (cons dep-list
+                            (map (lambda ([nm : String]) (aux nm))
+                                 (filter (lambda (d) (not (hash-ref seen d #f)))
+                                         dep-list)))))
+              name))))))
+  (aux name))

@@ -7,17 +7,7 @@
 (require "eval.rkt")
 (require "environment.rkt")
 (require "statements.rkt")
-(provide make-environment make-top-level interpret repl)
-
-(: make-environment (-> (Environment Type (AST Type))))
-(define (make-environment)
-  (Environment
-   (ann (make-hash)
-        (Mutable-HashTable String (Mutable-Vectorof (AST Type))))
-   (ann (make-hash)
-        (Mutable-HashTable String (Def Type)))
-   (ann (make-hash)
-        (Mutable-HashTable String (Setof String)))))
+(provide make-top-level interpret repl)
 
 (: make-top-level (-> String (Environment Type (AST Type)) (Either True String)))
 (define (make-top-level source environment)

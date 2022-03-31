@@ -15,14 +15,18 @@
     [(Binary b2 (Nil) y) (Binary (RefT #f #f) (Nil) y)]
     [(Binary b2 x y) (Binary (RefT #f #f) (bury-ref x) y)]))
 
-;; TODO: fix x->1->2->3
-(: add-to-ref-left (-> Type (AST Type) (AST Type)))
+(: add-to-ref-left (-> Type (AST Type) (Option (AST Type))))
 (define (add-to-ref-left t r)
   (match r
+    [(Unary _ _) #f]
     [(Binary (RefT _ _) (Nil) y)
      (Binary (RefT #f #f) (Unary t (Nil)) y)]
     [(Binary (RefT _ _) x y)
-     (Binary (RefT #f #f) (add-to-ref-left t x) y)]))
+     (match (add-to-ref-left t x)
+       [#f #f]
+       [nb
+        (assert nb)
+        (Binary (RefT #f #f) nb y)])]))
 
 (: tree (-> Type (Listof Token) (Either (AST Type) String)))
 (define (tree t tl)
@@ -35,7 +39,11 @@
          [(RefT _ _)
           (Ok (Binary (RefT #f #f) (bury-ref x) y))]
          [_
-          (Ok (Binary (RefT #f #f) (add-to-ref-left t x) y))])]
+          (match (add-to-ref-left t x)
+            [#f (Ok (Unary t (Binary (RefT #f #f) x y)))]
+            [nx
+             (assert nx)
+             (Ok (Binary (RefT #f #f) nx y))])])]
       [(Ok (Binary b (Nil) y))
        (match t
          [(BinopT _ _ _) (Ok (Binary t (Nil) (Binary b (Nil) y)))]

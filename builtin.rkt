@@ -270,6 +270,11 @@
                        [(Ok r) (vector-set! v i r)
                                (loop (add1 i))]
                        [(Fail x) (Fail x)]))])))]
+      [(list f (StringT str))
+       ((map-f ev)
+        (list f (VectorT (vector-map (lambda ([c : Char]) (Unary (StringT (vector c)) (Nil)))
+                                     str)))
+        ic e)]
       [_
        (Fail "[ERROR] map: vector expected")])))
 

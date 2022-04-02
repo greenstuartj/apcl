@@ -431,12 +431,14 @@
          [else
           (match vs
             [(VectorT v)
-             (if (>= (abs n) (vector-length v))
+             (if (or (>= n (vector-length v))
+                     (> (abs n) (vector-length v)))
                  (s-un (NoneT))
                  (Ok (vector-ref v (handle-neg (cast n Integer)
                                                (vector-length v)))))]
             [(StringT s)
-             (if (>= (abs n) (vector-length s))
+             (if (or (>= n (vector-length s))
+                     (> (abs n) (vector-length s)))
                  (s-un (NoneT))
                  (s-un
                   (StringT (vector

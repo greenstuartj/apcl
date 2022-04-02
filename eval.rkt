@@ -142,10 +142,10 @@
          [(Ok (Unary (ModuleT e) (Nil)))
           (match rhs
             [(Unary (IdentifierT name) next)
-             (match (eval-ast (Unary (IdentifierT name) (Nil)) icontext e)
+             (match (eval-ast next icontext environment)
                [(Fail x) (Fail x)]
                [(Ok x)
-                (eval-ast (append-ast x next) icontext environment)])]
+                (eval-ast (Unary (IdentifierT name) x) icontext e)])]
             [_
              (Fail "[ERROR] expected identifier when referencing in a module")])]
          [_

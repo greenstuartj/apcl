@@ -221,6 +221,8 @@
            [(list (Ok x) (Ok y)) (Ok (Unary (VectorT x) y))]
            [(list (Ok x) (Fail y)) (Fail y)]
            [(list (Fail x) _) (Fail x)])))]
+    [(Unary (LiteralModuleT _) _)
+     (Fail "[ERROR] modules can only be used in definitions")]
     [(Unary v next)
      (inject-either (lambda ([x : (AST Type)])
                       (Unary v x))

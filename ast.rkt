@@ -40,7 +40,7 @@
       [(Unary x next)
        (string-append (sf x) " " ((show-ast sf) next))]
       [(Binary x l r)
-       (string-append ((show-ast sf) l) " " (sf x) " " ((show-ast sf) r))])))
+       (string-append "(" ((show-ast sf) l) " " (sf x) " " ((show-ast sf) r) ")")])))
 
 (: depends-ast (All (a) (-> (-> a (Listof String)) (-> (AST a) (Listof String)))))
 (define (depends-ast df)

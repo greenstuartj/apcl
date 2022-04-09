@@ -980,6 +980,9 @@
 (define core-table
   (hash
    "optional" (list 1 optional-f)
+   "abs" (list 1 abs-f)
+   "not" (list 1 not-f)
+   "neg" (list 1 neg-f)
    "get" (list 2 get-f)
    "iota" (list 1 iota-f)
    "map" (list 2 map-f)

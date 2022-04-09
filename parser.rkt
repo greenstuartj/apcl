@@ -237,11 +237,11 @@
     [`(,(Token 'identifier name _) . ,d)
      (tree (IdentifierT name) d)]
     [`(,(Token 'not _ _) . ,d)
-     (tree (BuiltinT 1 '() (not-f eval-ast)) d)]
+     (tree (IdentifierT "not") d)]
     [`(,(Token 'neg _ _) . ,d)
-     (tree (BuiltinT 1 '() (neg-f eval-ast)) d)]
+     (tree (IdentifierT "neg") d)]
     [`(,(Token 'abs _ _) . ,d)
-     (tree (BuiltinT 1 '() (abs-f eval-ast)) d)]
+     (tree (IdentifierT "abs") d)]
     [`(,(Token 'number num _) . ,d)
      (let ((result (string->number num)))
        (if result

@@ -4,8 +4,6 @@
 (require "lexer.rkt")
 (require "types.rkt")
 (require "ast.rkt")
-(require "builtin.rkt")
-(require "eval.rkt")
 (provide parse parse-lambda depth-take)
 
 (: bury-ref (-> (AST Type) (AST Type)))
@@ -61,25 +59,9 @@
 
 (: binop (-> String Type))
 (define (binop s)
-  (match s
-    ["+"   (BinopT #f #f add)]
-    ["-"   (BinopT #f #f minus)]
-    ["*"   (BinopT #f #f mult)]
-    ["/"   (BinopT #f #f div)]
-    ["^"   (BinopT #f #f pow)]
-    ["%"   (BinopT #f #f mod)]
-    ["<."  (BinopT #f #f min-f)]
-    [">."  (BinopT #f #f max-f)]
-    ["="   (BinopT #f #f eq)]
-    ["!="  (BinopT #f #f neq)]
-    ["<"   (BinopT #f #f lt)]
-    ["<="  (BinopT #f #f le)]
-    [">"   (BinopT #f #f gt)]
-    [">="  (BinopT #f #f ge)]
-    ["or"  (BinopT #f #f or-f)]
-    ["and" (BinopT #f #f and-f)]
-    ["&"   (BinopT #f #f concat-f)]
-    ["->"  (RefT #f #f)]))
+  (if (equal? s "->")
+      (RefT #f #f)
+      (BinopT #f #f s)))
 
 (: depth-take
    (-> (Listof Token) Integer TokenType TokenType String

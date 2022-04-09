@@ -103,11 +103,7 @@
 (struct BinopT
   ([lhs : (Option Type)]
    [rhs : (Option Type)]
-   [body : (-> Type
-               Type
-               (IContext Type)
-               (Environment Type (AST Type))
-               (Either (AST Type) String))])
+   [name : String])
   #:transparent)
 
 (struct RefT
@@ -166,7 +162,7 @@
                     ": "
                     ((show-ast show-type) body)
                     ")")]
-    [(BinopT _ _ _) "<op>"]
+    [(BinopT _ _ s) s]
     [(BuiltinT _ _ _) "<core>"]
     [(RefT _ _) "->"]
     [_ "not implemented"]))

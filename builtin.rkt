@@ -5,12 +5,7 @@
 (require "types.rkt")
 (require "environment.rkt")
 (require "table.rkt")
-(provide core-table
-         not-f neg-f abs-f
-         add minus div mult pow mod min-f max-f
-         eq neq lt le gt ge
-         or-f and-f
-         concat-f)
+(provide core-table binop-table)
 
 ;; HELPERS
 
@@ -885,13 +880,13 @@
                     '("v" "a")
                     '#hash()
                     (Binary
-                     (BinopT #f #f concat-f)
+                     (BinopT #f #f "&")
                      (Unary
                       (GroupT (Unary (IdentifierT "string")
                                      (Unary (IdentifierT "v") (Nil))))
                       (Nil))
                      (Binary
-                      (BinopT #f #f concat-f)
+                      (BinopT #f #f "&")
                       (Unary (StringT (vector #\newline)) (Nil))
                       (Unary
                        (GroupT (Unary (IdentifierT "string")
@@ -914,13 +909,13 @@
                         '("v" "a")
                         '#hash()
                         (Binary
-                         (BinopT #f #f concat-f)
+                         (BinopT #f #f "&")
                          (Unary
                           (GroupT (Unary (IdentifierT "string")
                                          (Unary (IdentifierT "v") (Nil))))
                           (Nil))
                          (Binary
-                          (BinopT #f #f concat-f)
+                          (BinopT #f #f "&")
                           (Unary (StringT (vector #\tab)) (Nil))
                           (Unary
                            (GroupT (Unary (IdentifierT "string")
@@ -975,6 +970,27 @@
 ; union (or just & ?)
 ; uppercase
 ; lowercase
+
+(: binop-table (Immutable-HashTable String binop-signature))
+(define binop-table
+  (hash
+   "+"   add
+   "-"   minus
+   "*"   mult
+   "/"   div
+   "^"   pow
+   "%"   mod
+   "<."  min-f
+   ">."  max-f
+   "="   eq
+   "!="  neq
+   "<"   lt
+   "<="  le
+   ">"   gt
+   ">="  ge
+   "or"  or-f
+   "and" and-f
+   "&"   concat-f))
 
 (: core-table (Immutable-HashTable String (List Integer core-signature)))
 (define core-table

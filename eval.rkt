@@ -194,7 +194,7 @@
     [(Unary (BinopT l r b) next)
      (assert l) ; not #f due to above match cases
      (assert r) ; not #f due to above match cases
-     (let ([result (b l r icontext environment)])
+     (let ([result ((hash-ref binop-table b) l r icontext environment)])
        (match result
          [(Fail x) (Fail x)]
          [(Ok x) (eval-ast (append-ast x next) icontext environment)]))]

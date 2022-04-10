@@ -6,7 +6,6 @@
 (require "parser.rkt")
 (require "eval.rkt")
 (require "environment.rkt")
-(require "statements.rkt")
 (provide make-top-level interpret repl)
 
 (: make-top-level (-> String (Environment Type (AST Type)) (Either True String)))

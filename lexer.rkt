@@ -32,7 +32,8 @@
      'in
      'import
      'as
-     'right-arrow))
+     'right-arrow
+     'left-arrow))
 
 (struct Token ([t : TokenType]
                [d : String]
@@ -156,10 +157,12 @@
      (cons-lex 'semicolon ";" d line)]
     [`(#\, . ,d)
      (cons-lex 'comma "," d line)]
-    [`(#\+ . ,d)
-     (cons-lex 'binop "+" d line)]
     [`(#\- #\> . ,d)
      (cons-lex 'right-arrow "->" d line)]
+    [`(#\< #\- . ,d)
+     (cons-lex 'left-arrow "<-" d line)]
+    [`(#\+ . ,d)
+     (cons-lex 'binop "+" d line)]
     [`(#\- . ,d)
      (cons-lex 'binop "-" d line)]
     [`(#\* . ,d)

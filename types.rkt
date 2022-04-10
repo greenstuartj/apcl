@@ -18,6 +18,7 @@
          BuiltinT
          BinopT
          RefT
+         SetT
          LiteralModuleT
          ModuleT
 
@@ -39,6 +40,7 @@
      BuiltinT
      BinopT
      RefT
+     SetT
      LiteralModuleT
      ModuleT))
 
@@ -111,6 +113,11 @@
    [position  : (Option Type)])
   #:transparent)
 
+(struct SetT
+  ([position : (Option RefT)]
+   [value    : (Option Type)])
+  #:transparent)
+
 (struct LiteralModuleT
   ([tokens : (Listof Token)])
   #:transparent)
@@ -165,6 +172,8 @@
     [(BinopT _ _ s) s]
     [(BuiltinT _ _ _) "<core>"]
     [(RefT _ _) "->"]
+    [(SetT _ _) "<-"]
+    [(ModuleT _) "<module>"]
     [_ "not implemented"]))
 
 (: depends-type (-> Type (Listof String)))

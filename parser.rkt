@@ -30,6 +30,18 @@
 (define (tree t tl)
   (let ([result (parse tl)])
     (match result
+      [(Ok (Binary (SetT #f #f) (Nil) y))
+       (Ok (Binary (SetT #f #f) (Unary t (Nil)) y))]
+      [(Ok (Binary (SetT #f #f) x y))
+       (match t
+         [(RefT _ _)
+          (Ok (Binary (SetT #f #f) (bury-ref x) y))]
+         [_
+          (match (add-to-ref-left t x)
+            [#f (Ok (Unary t (Binary (SetT #f #f) x y)))]
+            [nx
+             (assert nx)
+             (Ok (Binary (SetT #f #f) nx y))])])]
       [(Ok (Binary (RefT #f #f) (Nil) y))
        (Ok (Binary (RefT #f #f) (Unary t (Nil)) y))]
       [(Ok (Binary (RefT #f #f) x y))
@@ -52,6 +64,7 @@
          [_ (Ok (Unary t (Binary b x y)))])]
       [(Ok ast)
        (match t
+         [(SetT _ _) (Ok (Binary t (Nil) ast))]
          [(RefT _ _) (Ok (Binary t (Nil) ast))]
          [(BinopT _ _ _) (Ok (Binary t (Nil) ast))]
          [_ (Ok (Unary t ast))])]
@@ -59,9 +72,10 @@
 
 (: binop (-> String Type))
 (define (binop s)
-  (if (equal? s "->")
-      (RefT #f #f)
-      (BinopT #f #f s)))
+  (cond
+    [(equal? s "->") (RefT #f #f)]
+    [(equal? s "<-") (SetT #f #f)]
+    [else (BinopT #f #f s)]))
 
 (: depth-take
    (-> (Listof Token) Integer TokenType TokenType String
@@ -242,6 +256,8 @@
     [`(,(Token 'binop s _) . ,d)
      (tree (binop s) d)]
     [`(,(Token 'right-arrow s _) . ,d)
+     (tree (binop s) d)]
+    [`(,(Token 'left-arrow s _) . ,d)
      (tree (binop s) d)]
     [`(,(Token 'open-square _ line) . ,d)
      (let ([result (parse-vector d line)])

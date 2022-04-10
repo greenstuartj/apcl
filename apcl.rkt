@@ -2,7 +2,7 @@
 (require "types.rkt")
 (require "ast.rkt")
 (require "environment.rkt")
-(require "statements.rkt")
+(require "eval.rkt")
 (require "interpreter.rkt")
 
 (: main (-> Void))

@@ -955,21 +955,62 @@
                          (Unary v (Nil)))
              ic e)]))))
 
+(: string-to-number-f core-signature)
+(define (string-to-number-f ev)
+  (lambda (tl ic e)
+    (match tl
+      [(list (StringT s))
+       (let ([n (string->number (list->string (vector->list s)))])
+         (if n
+             (s-un (NumberT (cast n Real)))
+             (Fail (format "[ERROR] string_to_number: invalid number conversion '~a'"
+                           (list->string (vector->list s))))))]
+      [_ (Fail "[ERROR] string_to_number: string expected")])))
+
+(: string-split-f core-signature)
+(define (string-split-f ev)
+  (lambda (tl ic e)
+    (match tl
+      [(list (StringT s1) (StringT s2))
+       (s-un (VectorT (list->vector
+                       (map (lambda ([s : String])
+                              (Unary (StringT (list->vector (string->list s))) (Nil)))
+                            (string-split (list->string (vector->list s2))
+                                          (list->string (vector->list s1)))))))]
+      [_ (Fail "[ERROR] string_split: string expected")])))
+
+(: unique-f core-signature)
+(define (unique-f ev)
+  (: f (All (a) (-> (Mutable-Vectorof a) (Mutable-Vectorof a))))
+  (define (f v)
+    (let loop ([s : (Setof a) (set)]
+               [acc : (Listof a) '()]
+               [lst : (Listof a) (vector->list v)])
+      (cond
+        [(null? lst) (list->vector (reverse acc))]
+        [(set-member? s (car lst)) (loop s acc (cdr lst))]
+        [else (loop (set-add s (car lst)) (cons (car lst) acc) (cdr lst))])))
+  (lambda (tl ic e)
+    (match tl
+      [(list (VectorT v))
+       (s-un (VectorT (f v)))]
+      [(list (StringT s))
+       (s-un (StringT (f s)))]
+      [_ (Fail "[ERROR] unique: string|vector expected")])))
+
 ; get-many
 ; group_n
 ; slice
-; string_split (maybe just split and work on string|vector)
-; string_to_number
 ; amend (and amend_mutate?)
 ; index_where
 ; push (or diff name, like & but will promote to list)
 ; key
-; unique
 ; intersection
-; without
-; union (or just & ?)
 ; uppercase
 ; lowercase
+; grade_up
+; grade_down
+; sort
 
 (: binop-table (Immutable-HashTable String binop-signature))
 (define binop-table
@@ -1029,4 +1070,7 @@
    "string" (list 1 string-f)
    "transpose" (list 1 transpose-f)
    "show_table" (list 1 show-table-f)
-   "filter" (list 2 filter-f)))
+   "filter" (list 2 filter-f)
+   "string_to_number" (list 1 string-to-number-f)
+   "string_split" (list 2 string-split-f)
+   "unique" (list 1 unique-f)))

@@ -22,7 +22,49 @@
        (Given "")
        (When "(\\arg: arg+1) 10")
        (Then "11"))
- 
+
+ (Name "variable"
+       (Given
+        "
+        x: 10
+        ")
+       (When "x")
+       (Then "10"))
+
+ (Name "adding variables"
+       (Given
+        "
+        x: 10;
+        y: 20;
+        ")
+       (When "x+y")
+       (Then "30"))
+
+ (Name "function"
+       (Given
+        "
+        f x: x+1;
+        ")
+       (When "f 1")
+       (Then "2"))
+
+ (Name "inputs default to none"
+       (Given
+        "
+        input x;
+        ")
+       (When "x")
+       (Then "none"))
+
+ (Name "set inputs"
+       (Given
+        "
+        input x;
+        ")
+       (When "x: 10"
+             "x")
+       (Then "10"))
+
  (Name "add inputs"
        (Given
         "
@@ -34,12 +76,4 @@
              "y: 20"
              "result")
        (Then "30"))
-
- (Name "function"
-       (Given
-        "
-        f x: x+1;
-        ")
-       (When "f 1")
-       (Then "2"))
  )

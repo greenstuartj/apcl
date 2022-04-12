@@ -1,9 +1,9 @@
 #lang typed/racket
-(require "types.rkt")
-(require "ast.rkt")
-(require "environment.rkt")
-(require "eval.rkt")
-(require "interpreter.rkt")
+(require "src/types.rkt")
+(require "src/ast.rkt")
+(require "src/environment.rkt")
+(require "src/eval.rkt")
+(require "src/interpreter.rkt")
 
 (: main (-> Void))
 (define (main)

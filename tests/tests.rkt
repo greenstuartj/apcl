@@ -34,5 +34,12 @@
              "y: 20"
              "result")
        (Then "30"))
- 
+
+ (Name "function"
+       (Given
+        "
+        f x: x+1;
+        ")
+       (When "f 1")
+       (Then "2"))
  )

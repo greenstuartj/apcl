@@ -82,7 +82,7 @@
          [(list (Fail x) _) (Fail x)]
          [(list _ (Fail y)) (Fail y)]
          [(list (Ok (Unary (LambdaT args nic2 body) (Nil))) (Ok y))
-          (eval-ast (append-ast (Unary (LambdaT args nic body) (Nil)) y)
+          (eval-ast (append-ast (Unary (LambdaT args nic2 body) (Nil)) y)
                     icontext environment)]
          [(list (Ok x) (Ok y))
           (eval-ast (append-ast x y) icontext environment)]))]

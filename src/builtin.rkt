@@ -419,6 +419,17 @@
        (s-un (NoneT))]
       [(list (OptionT) _)
        (s-un (OptionT))]
+      [(list (VectorT ns) vs)
+       (let loop ([ms : (Listof (AST Type)) (vector->list ns)]
+                  [acc : (Listof (AST Type)) '()])
+         (cond
+           [(null? ms) (s-un (VectorT (list->vector (reverse acc))))]
+           [else
+            (match (car ms)
+              [(Unary m _)
+               (match ((get-f ev) (list m vs) ic e)
+                 [(Ok x) (loop (cdr ms) (cons x acc))]
+                 [(Fail x) (Fail x)])])]))]
       [(list (NumberT n) vs)
        (cond
          [(not (integer? n))
@@ -750,11 +761,26 @@
                   (loop (add1 i) acc))])))
   (lambda (tl ic e)
     (match tl
+      [(list (VectorT elems) v)
+       (let loop ([es : (Listof (AST Type)) (vector->list elems)]
+                  [acc : (Listof (AST Type)) '()])
+         (cond
+           [(null? es) (s-un (VectorT (list->vector (reverse acc))))]
+           [else
+            (match (car es)
+              [(Unary elem _)
+               (match ((index-f ev) (list elem v) ic e)
+                 [(Ok x) (loop (cdr es) (cons x acc))]
+                 [(Fail x) (Fail x)])])]))]
       [(list elem (VectorT v))
        (f (Unary elem (Nil)) v)]
       [(list (StringT elem) (StringT s))
        (if (> (vector-length elem) 1)
-           (Fail "[ERROR] index: expected 1 char string")
+           ((index-f ev) (list (VectorT (vector-map (lambda ([c : Char])
+                                                      (Unary (StringT (vector c)) (Nil)))
+                                                    elem))
+                               (StringT s))
+                         ic e)
            (f (vector-ref elem 0) s))]
       [_ (Fail "[ERROR] index: string|vector expected")])))
 
@@ -998,7 +1024,18 @@
        (s-un (StringT (f s)))]
       [_ (Fail "[ERROR] unique: string|vector expected")])))
 
-; get-many
+(: id-f core-signature)
+(define (id-f ev)
+  (lambda (tl ic e)
+    (match tl
+      [(list t) (s-un t)])))
+
+(: const-f core-signature)
+(define (const-f ev)
+  (lambda (tl ic e)
+    (match tl
+      [(list t _) (s-un t)])))
+
 ; group_n
 ; slice
 ; amend (and amend_mutate?)
@@ -1073,4 +1110,6 @@
    "filter" (list 2 filter-f)
    "string_to_number" (list 1 string-to-number-f)
    "string_split" (list 2 string-split-f)
-   "unique" (list 1 unique-f)))
+   "unique" (list 1 unique-f)
+   "id" (list 1 id-f)
+   "const" (list 2 const-f)))

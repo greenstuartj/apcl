@@ -1036,9 +1036,34 @@
     (match tl
       [(list t _) (s-un t)])))
 
+(: amend-f core-signature)
+(define (amend-f ev)
+  (lambda (tl ic e)
+    (match tl
+      [(list (NumberT index) value (VectorT v))
+       (if (not (integer? index))
+           (Fail "[ERROR] amend: integer expected")
+           (let ([nv : (Mutable-Vectorof (AST Type)) (vector-copy v)])
+             (vector-set! nv (cast index Integer) (Unary value (Nil)))
+             (s-un (VectorT nv))))]
+      [(list (NumberT index) (StringT s1) (StringT s2))
+       (cond
+         [(not (integer? index))
+          (Fail "[ERROR] amend: integer expected")]
+         [(not (= (vector-length s1) 1))
+          (Fail "[ERROR] amend: string length should be 1")]
+         [else
+          (let ([ns : (Mutable-Vectorof Char) (vector-copy s2)])
+             (vector-set! ns (cast index Integer) (vector-ref s1 0))
+             (s-un (StringT ns)))])]
+      [(list (NumberT _) _ _)
+       (Fail "[ERROR] amend: string|vector expected")]
+      [_
+       (Fail "[ERROR] amend: integer expected")])))
+           
+
 ; group_n
 ; slice
-; amend (and amend_mutate?)
 ; index_where
 ; push (or diff name, like & but will promote to list)
 ; key
@@ -1112,4 +1137,5 @@
    "string_split" (list 2 string-split-f)
    "unique" (list 1 unique-f)
    "id" (list 1 id-f)
-   "const" (list 2 const-f)))
+   "const" (list 2 const-f)
+   "amend" (list 3 amend-f)))

@@ -1060,13 +1060,22 @@
        (Fail "[ERROR] amend: string|vector expected")]
       [_
        (Fail "[ERROR] amend: integer expected")])))
-           
+
+(: amend-with-f core-signature)
+(define (amend-with-f ev)
+  (lambda (tl ic e)
+    (match tl
+      [(list f i v)
+       (match ((get-f ev) (list i v) ic e)
+         [(Fail x) (Fail x)]
+         [(Ok x) (match (ev (Unary f x) ic e)
+                   [(Fail x) (Fail x)]
+                   [(Ok (Unary x _)) ((amend-f ev) (list i x v) ic e)])])])))
 
 ; group_n
 ; slice
 ; index_where
 ; push (or diff name, like & but will promote to list)
-; key
 ; intersection
 ; uppercase
 ; lowercase
@@ -1138,4 +1147,5 @@
    "unique" (list 1 unique-f)
    "id" (list 1 id-f)
    "const" (list 2 const-f)
-   "amend" (list 3 amend-f)))
+   "amend" (list 3 amend-f)
+   "amend_with" (list 3 amend-with-f)))

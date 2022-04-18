@@ -1096,6 +1096,13 @@
       (match tl
         [(list v1 v2)
          (ev (append-ast ast (Unary v1 (Unary v2 (Nil)))) ic e)]))))
+
+(: reflex-f core-signature)
+(define (reflex-f ev)
+  (lambda (tl ic e)
+    (match tl
+      [(list f x)
+       (ev (Unary f (Unary x (Unary x (Nil)))) ic e)])))
          
 ; group_n
 ; slice
@@ -1173,4 +1180,5 @@
    "const" (list 2 const-f)
    "amend" (list 3 amend-f)
    "amend_with" (list 3 amend-with-f)
-   "intersection" (list 2 intersection-f)))
+   "intersection" (list 2 intersection-f)
+   "reflex" (list 2 reflex-f)))

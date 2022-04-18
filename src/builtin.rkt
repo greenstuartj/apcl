@@ -1072,11 +1072,35 @@
                    [(Fail x) (Fail x)]
                    [(Ok (Unary x _)) ((amend-f ev) (list i x v) ic e)])])])))
 
+(: intersection-f core-signature)
+(define (intersection-f ev)
+  (lambda (tl ic e)
+    (let ([ast (Unary
+                (LambdaT
+                 '("v1" "v2")
+                 '#hash()
+                 (Unary
+                  (IdentifierT "get")
+                  (Unary
+                   (GroupT
+                    (Unary
+                     (GroupT
+                      (Unary
+                       (IdentifierT "reduce")
+                       (Unary (GroupT (Binary (BinopT #f #f "&") (Nil) (Nil))) (Nil))))
+                     (Unary
+                      (IdentifierT "index")
+                      (Unary (IdentifierT "v2") (Unary (IdentifierT "v1") (Nil))))))
+                   (Unary (IdentifierT "v1") (Nil)))))
+                (Nil))])
+      (match tl
+        [(list v1 v2)
+         (ev (append-ast ast (Unary v1 (Unary v2 (Nil)))) ic e)]))))
+         
 ; group_n
 ; slice
 ; index_where
 ; push (or diff name, like & but will promote to list)
-; intersection
 ; uppercase
 ; lowercase
 ; grade_up
@@ -1148,4 +1172,5 @@
    "id" (list 1 id-f)
    "const" (list 2 const-f)
    "amend" (list 3 amend-f)
-   "amend_with" (list 3 amend-with-f)))
+   "amend_with" (list 3 amend-with-f)
+   "intersection" (list 2 intersection-f)))

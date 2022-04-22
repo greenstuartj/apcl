@@ -191,6 +191,8 @@
      (cons-lex 'binop ">" d line)]
     [`(#\& . ,d)
      (cons-lex 'binop "&" d line)]
+    [`(#\@ . ,d)
+     (cons-lex 'binop "@" d line)]
     [`(#\| . ,d)
      (cons-lex 'abs "|" d line)]
     [`(#\~ . ,d)

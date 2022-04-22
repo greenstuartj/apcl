@@ -183,6 +183,50 @@
      (s-un (VectorT (vector-append v1 v2)))]
     [_ (Fail "[ERROR] &: type mismatch")]))
 
+(: compose-f binop-signature)
+(define (compose-f t1 t2 ic e)
+  (: build-ast (-> Real (AST Type)))
+  (define (build-ast n)
+    (let loop ([acc : (AST Type) (Nil)]
+               [i : Real (sub1 n)])
+      (cond
+        [(< i 0) acc]
+        [else (loop (Unary (IdentifierT (number->string i)) acc)
+                    (sub1 i))])))
+  (match t2
+    [(LambdaT args2 ic2 body2)
+     (s-un (LambdaT args2 ic2 (Unary t1 body2)))]
+    [(BinopT #f #f name)
+     (s-un (LambdaT '("0" "1")
+                    (hash)
+                    (Unary t1
+                           (Unary t2
+                                  (Unary (IdentifierT "0")
+                                         (Unary (IdentifierT "1")
+                                                (Nil)))))))]
+    [(BinopT #f rhs name)
+     (s-un (LambdaT '("0")
+                    (hash)
+                    (Unary t1
+                           (Unary t2
+                                  (Unary (IdentifierT "0")
+                                         (Nil))))))]
+    [(BinopT lhs #f name)
+     (s-un (LambdaT '("0")
+                    (hash)
+                    (Unary t1
+                           (Unary t2
+                                  (Unary (IdentifierT "0")
+                                         (Nil))))))]
+    [(BuiltinT argc argl body)
+     (s-un (LambdaT (map number->string (range argc))
+                    (hash)
+                    (Unary t1
+                           (Unary t2
+                                  (build-ast argc)))))]
+    [_
+     (Ok (Unary t1 (Unary t2 (Nil))))]))
+
 ;; OTHER FUNCTIONS
 
 (define-type core-signature
@@ -1103,6 +1147,11 @@
     (match tl
       [(list f x)
        (ev (Unary f (Unary x (Unary x (Nil)))) ic e)])))
+
+(: void-f core-signature)
+(define (void-f ev)
+  (lambda (tl ic e)
+    (Ok (Nil))))
          
 ; group_n
 ; slice
@@ -1133,7 +1182,8 @@
    ">="  ge
    "or"  or-f
    "and" and-f
-   "&"   concat-f))
+   "&"   concat-f
+   "@"   compose-f))
 
 (: core-table (Immutable-HashTable String (List Integer core-signature)))
 (define core-table
@@ -1181,4 +1231,5 @@
    "amend" (list 3 amend-f)
    "amend_with" (list 3 amend-with-f)
    "intersection" (list 2 intersection-f)
-   "reflex" (list 2 reflex-f)))
+   "reflex" (list 2 reflex-f)
+   "void" (list 1 void-f)))

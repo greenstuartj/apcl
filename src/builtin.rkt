@@ -5,6 +5,8 @@
 (require "types.rkt")
 (require "environment.rkt")
 (require "table.rkt")
+(require "lexer.rkt")
+(require "parser.rkt")
 (provide core-table binop-table)
 
 ;; HELPERS
@@ -21,6 +23,13 @@
   (match t
     [(NumberT 0) #t]
     [_ #f]))
+
+(: string->ast (-> String (AST Type)))
+(define (string->ast source)
+  (match (lex (string->list source) 0)
+    [(Ok tokens)
+     (match (parse tokens)
+       [(Ok ast) ast])]))
 
 ;; BINOP 
 
@@ -1004,26 +1013,11 @@
 (: filter-f core-signature)
 (define (filter-f ev)
   (lambda (tl ic e)
-    (let ([ast
-           (Unary
-            (LambdaT
-             '("p" "v")
-             '#hash()
-             (Unary
-              (IdentifierT "replicate")
-              (Unary
-               (GroupT (Unary (IdentifierT "map")
-                              (Unary (IdentifierT "p")
-                                     (Nil))))
-               (Unary (IdentifierT "v")
-                      (Unary (IdentifierT "v")
-                             (Nil))))))
-            (Nil))])
-      (match tl
-        [(list p v)
-         (ev (append-ast (Unary (GroupT (append-ast ast (Unary p (Nil)))) (Nil))
-                         (Unary v (Nil)))
-             ic e)]))))
+    (match tl
+      [(list p v)
+       (ev (Unary (GroupT (append-ast (string->ast "\\p v: replicate (map p) v v") (Unary p (Nil))))
+                  (Unary v (Nil)))
+           ic e)])))
 
 (: string-to-number-f core-signature)
 (define (string-to-number-f ev)
@@ -1119,27 +1113,11 @@
 (: intersection-f core-signature)
 (define (intersection-f ev)
   (lambda (tl ic e)
-    (let ([ast (Unary
-                (LambdaT
-                 '("v1" "v2")
-                 '#hash()
-                 (Unary
-                  (IdentifierT "get")
-                  (Unary
-                   (GroupT
-                    (Unary
-                     (GroupT
-                      (Unary
-                       (IdentifierT "reduce")
-                       (Unary (GroupT (Binary (BinopT #f #f "&") (Nil) (Nil))) (Nil))))
-                     (Unary
-                      (IdentifierT "index")
-                      (Unary (IdentifierT "v2") (Unary (IdentifierT "v1") (Nil))))))
-                   (Unary (IdentifierT "v1") (Nil)))))
-                (Nil))])
-      (match tl
-        [(list v1 v2)
-         (ev (append-ast ast (Unary v1 (Unary v2 (Nil)))) ic e)]))))
+    (match tl
+      [(list v1 v2)
+       (ev (append-ast (string->ast "\\v1 v2: (reduce (&)) get (index v2 v1) v1")
+                       (Unary v1 (Unary v2 (Nil))))
+           ic e)])))
 
 (: reflex-f core-signature)
 (define (reflex-f ev)
@@ -1152,6 +1130,15 @@
 (define (void-f ev)
   (lambda (tl ic e)
     (Ok (Nil))))
+
+(: slice-f core-signature)
+(define (slice-f ev)
+  (lambda (tl ic e)
+    (match tl
+      [(list from to vec)
+       (ev (append-ast (string->ast "\\from to v: (map (\\i: get i v)) (map (+from)) iota to-from")
+                       (Unary from (Unary to (Unary vec (Nil)))))
+           ic e)])))
          
 ; group_n
 ; slice
@@ -1232,4 +1219,5 @@
    "amend_with" (list 3 amend-with-f)
    "intersection" (list 2 intersection-f)
    "reflex" (list 2 reflex-f)
-   "void" (list 1 void-f)))
+   "void" (list 1 void-f)
+   "slice" (list 3 slice-f)))

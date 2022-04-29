@@ -1141,7 +1141,6 @@
            ic e)])))
          
 ; group_n
-; slice
 ; index_where
 ; push (or diff name, like & but will promote to list)
 ; uppercase

@@ -23,7 +23,8 @@
          ModuleT
 
          show-type
-         depends-type)
+         depends-type
+         string-type)
 
 (define-type Type
   (U IdentifierT
@@ -202,3 +203,24 @@
            [dr (if r (depends-type r) '())])
        (append dl dr))]
     [_ '()]))
+
+(: string-type (-> Type String))
+(define (string-type t)
+  (match t
+    [(IdentifierT _)    "identifier"]
+    [(NumberT _)        "number"]
+    [(BoolT _)          "bool"]
+    [(StringT _)        "string"]
+    [(LiteralVectorT _) "vector"]
+    [(VectorT _)        "vector"]
+    [(NoneT)            "none"]
+    [(OptionT)          "option"]
+    [(IfT _ _ _)        "if"]
+    [(GroupT _)         "group"]
+    [(LambdaT _ _ _)    "lambda"]
+    [(BuiltinT _ _ _)   "builtin"]
+    [(BinopT _ _ _)     "binop"]
+    [(RefT _ _)         "ref"]
+    [(SetT _ _)         "set"]
+    [(LiteralModuleT _) "module"]
+    [(ModuleT _)        "module"]))

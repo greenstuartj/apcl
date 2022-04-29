@@ -31,6 +31,13 @@
      (match (parse tokens)
        [(Ok ast) ast])]))
 
+(: is-type (-> String core-signature))
+(define (is-type s)
+  (lambda (ev)
+    (lambda (tl ic e)
+      (match tl
+        [(list x) (s-un (BoolT (equal? s (string-type x))))]))))
+
 ;; BINOP 
 
 (define-type binop-signature
@@ -903,120 +910,41 @@
 (: transpose-f core-signature)
 (define (transpose-f ev)
   (lambda (tl ic e)
-    (let ([ast
-           (Unary
-            (LambdaT
-             '("tbl")
-             '#hash()
-             (Unary
-              (GroupT
-               (Unary
-                (IdentifierT "map")
-                (Unary
-                 (GroupT
-                  (Unary
-                   (LambdaT
-                    '("i")
-                    '#hash()
-                    (Unary
-                     (GroupT
-                      (Unary
-                       (IdentifierT "map")
-                       (Unary
-                        (GroupT (Unary (IdentifierT "get")
-                                       (Unary (IdentifierT "i") (Nil))))
-                        (Nil))))
-                     (Unary (IdentifierT "tbl") (Nil))))
-                   (Nil)))
-                 (Nil))))
-              (Unary
-               (IdentifierT "iota")
-               (Unary
-                (IdentifierT "length")
-                (Unary (IdentifierT "get")
-                       (Unary (NumberT 0) (Unary (IdentifierT "tbl") (Nil))))))))
-            (Nil))])
-      (match tl
-        [(list tbl)
-         (ev (append-ast ast (Unary tbl (Nil))) ic e)]))))
+    (match tl
+      [(list tbl)
+       (let ([ast-s
+              "\\tbl: 
+                 if 0=length tbl then
+                   []
+                 else
+                  (map (\\i: (map (get i)) tbl)) iota length get 0 tbl"])
+         (ev (append-ast (string->ast ast-s)
+                         (Unary tbl (Nil)))
+             ic e))])))
 
 (: show-table-f core-signature)
 (define (show-table-f ev)
   (lambda (tl ic e)
-    (let ([ast
-           (Unary
-            (LambdaT
-             '("tbl")
-             '#hash()
-             (Unary
-              (GroupT
-               (Unary
-                (IdentifierT "reduce")
-                (Unary
-                 (GroupT
-                  (Unary
-                   (LambdaT
-                    '("v" "a")
-                    '#hash()
-                    (Binary
-                     (BinopT #f #f "&")
-                     (Unary
-                      (GroupT (Unary (IdentifierT "string")
-                                     (Unary (IdentifierT "v") (Nil))))
-                      (Nil))
-                     (Binary
-                      (BinopT #f #f "&")
-                      (Unary (StringT (vector #\newline)) (Nil))
-                      (Unary
-                       (GroupT (Unary (IdentifierT "string")
-                                      (Unary (IdentifierT "a") (Nil))))
-                       (Nil)))))
-                   (Nil)))
-                 (Nil))))
-              (Unary
-               (GroupT
-                (Unary
-                 (IdentifierT "map")
-                 (Unary
-                  (GroupT
-                   (Unary
-                    (IdentifierT "reduce")
-                    (Unary
-                     (GroupT
-                      (Unary
-                       (LambdaT
-                        '("v" "a")
-                        '#hash()
-                        (Binary
-                         (BinopT #f #f "&")
-                         (Unary
-                          (GroupT (Unary (IdentifierT "string")
-                                         (Unary (IdentifierT "v") (Nil))))
-                          (Nil))
-                         (Binary
-                          (BinopT #f #f "&")
-                          (Unary (StringT (vector #\tab)) (Nil))
-                          (Unary
-                           (GroupT (Unary (IdentifierT "string")
-                                          (Unary (IdentifierT "a") (Nil))))
-                           (Nil)))))
-                       (Nil)))
-                     (Nil))))
-                  (Nil))))
-               (Unary (IdentifierT "transpose")
-                      (Unary (IdentifierT "tbl") (Nil))))))
-            (Nil))])
+    (let ([ast-s
+           "\\tbl:
+              (reduce (\\v a: v & '\\n' & a))
+              (map (reduce (\\v a: (string v) & '\\t' & (string a))))
+              transpose tbl"])
       (match tl
         [(list tbl)
-         (ev (append-ast ast (Unary tbl (Nil))) ic e)]))))
+         (ev (append-ast (string->ast ast-s) (Unary tbl (Nil))) ic e)]))))
 
 (: filter-f core-signature)
 (define (filter-f ev)
   (lambda (tl ic e)
     (match tl
       [(list p v)
-       (ev (Unary (GroupT (append-ast (string->ast "\\p v: replicate (map p) v v") (Unary p (Nil))))
-                  (Unary v (Nil)))
+       (ev (Unary
+            (GroupT
+             (append-ast
+              (string->ast "\\p v: replicate (map p) v v")
+              (Unary p (Nil))))
+            (Unary v (Nil)))
            ic e)])))
 
 (: string-to-number-f core-signature)
@@ -1136,10 +1064,41 @@
   (lambda (tl ic e)
     (match tl
       [(list from to vec)
-       (ev (append-ast (string->ast "\\from to v: (map (\\i: get i v)) (map (+from)) iota to-from")
-                       (Unary from (Unary to (Unary vec (Nil)))))
+       (ev (append-ast
+            (string->ast "\\from to v: (map (\\i: get i v)) (map (+from)) iota to-from")
+            (Unary from (Unary to (Unary vec (Nil)))))
            ic e)])))
-         
+
+(: type-of-f core-signature)
+(define (type-of-f ev)
+  (lambda (tl ic e)
+    (match tl
+      [(list x) (s-un (StringT (list->vector (string->list (string-type x)))))])))
+
+(: random-f core-signature)
+(define (random-f ev)
+  (lambda (tl ic e)
+    (s-un (NumberT (random)))))
+
+(: roll-f core-signature)
+(define (roll-f ev)
+  (lambda (tl ic e)
+    (match tl
+      [(list (NumberT n))
+       (if (not (integer? n))
+           (Fail "[ERROR] roll: integer expected")
+           (s-un (NumberT (random (cast n Integer)))))]
+      [_ (Fail "[ERROR] roll: integer expected")])))
+
+(: sum-f core-signature)
+(define (sum-f ev)
+  (lambda (tl ic e)
+    (match tl
+      [(list v)
+       (ev (append-ast (string->ast "\\: reduce (+)")
+                       (Unary v (Nil)))
+           ic e)])))
+
 ; group_n
 ; index_where
 ; push (or diff name, like & but will promote to list)
@@ -1219,4 +1178,18 @@
    "intersection" (list 2 intersection-f)
    "reflex" (list 2 reflex-f)
    "void" (list 1 void-f)
-   "slice" (list 3 slice-f)))
+   "slice" (list 3 slice-f)
+   "random" (list 0 random-f)
+   "roll" (list 1 roll-f)
+   "sum" (list 1 sum-f)
+   "type_of" (list 1 type-of-f)
+   "is_number" (list 1 (is-type "number"))
+   "is_bool" (list 1 (is-type "bool"))
+   "is_string" (list 1 (is-type "string"))
+   "is_vector" (list 1 (is-type "vector"))
+   "is_none" (list 1 (is-type "none"))
+   "is_option" (list 1 (is-type "option"))
+   "is_lambda" (list 1 (is-type "lambda"))
+   "is_builtin" (list 1 (is-type "builtin"))
+   "is_binop" (list 1 (is-type "binop"))
+   "is_module" (list 1 (is-type "module"))))

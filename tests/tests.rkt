@@ -11,7 +11,7 @@
  (Name "iota"
        (Given "")
        (When "iota 4")
-       (Then "[0, 1, 2, 3]"))
+       (Then "[0,1,2,3]"))
 
  (Name "rationals"
        (Given "")
@@ -65,6 +65,16 @@
              "x")
        (Then "10"))
 
+ (Name "changes propagate to dependencies"
+       (Given
+        "
+        input x;
+        y: x
+        ")
+       (When "x: 10"
+             "(x = y) and y != none")
+       (Then "true"))
+
  (Name "add inputs"
        (Given
         "
@@ -76,4 +86,5 @@
              "y: 20"
              "result")
        (Then "30"))
+
  )

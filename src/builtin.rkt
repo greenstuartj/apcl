@@ -199,6 +199,46 @@
      (s-un (VectorT (vector-append v1 v2)))]
     [_ (Fail "[ERROR] &: type mismatch")]))
 
+(: push-front-f binop-signature)
+(define (push-front-f t1 t2 ic e)
+  (match (list t1 t2)
+    [(list (StringT s1) (StringT s2))
+     (concat-f t1 t2 ic e)]
+    [(list x (VectorT v))
+     (let ([nx : (Mutable-Vectorof (AST Type)) (vector (Unary x (Nil)))])
+       (s-un (VectorT (vector-append nx v))))]
+    [_ (Fail "[ERROR] &>: type mismatch")]))
+
+(: push-front-enlist-f binop-signature)
+(define (push-front-enlist-f t1 t2 ic e)
+  (match (list t1 t2)
+    [(list (StringT s1) (StringT s2))
+     (concat-f t1 t2 ic e)]
+    [(list x (VectorT v))
+     (push-front-f t1 t2 ic e)]
+    [(list x y)
+     (push-front-f x (VectorT (vector (Unary y (Nil)))) ic e)]))
+
+(: push-back-f binop-signature)
+(define (push-back-f t1 t2 ic e)
+  (match (list t1 t2)
+    [(list (StringT s1) (StringT s2))
+     (concat-f t1 t2 ic e)]
+    [(list (VectorT v) x)
+     (let ([nx : (Mutable-Vectorof (AST Type)) (vector (Unary x (Nil)))])
+       (s-un (VectorT (vector-append v nx))))]
+    [_ (Fail "[ERROR] <&: type mismatch")]))
+
+(: push-back-enlist-f binop-signature)
+(define (push-back-enlist-f t1 t2 ic e)
+  (match (list t1 t2)
+    [(list (StringT s1) (StringT s2))
+     (concat-f t1 t2 ic e)]
+    [(list (VectorT v) x)
+     (push-back-f t1 t2 ic e)]
+    [(list x y)
+     (push-back-f (VectorT (vector (Unary x (Nil)))) y ic e)]))
+
 (: compose-f binop-signature)
 (define (compose-f t1 t2 ic e)
   (: build-ast (-> Real (AST Type)))
@@ -1101,7 +1141,6 @@
 
 ; group_n
 ; index_where
-; push (or diff name, like & but will promote to list)
 ; uppercase
 ; lowercase
 ; grade_up
@@ -1128,6 +1167,10 @@
    "or"  or-f
    "and" and-f
    "&"   concat-f
+   "&>"  push-front-f
+   "&>>" push-front-enlist-f
+   "<&"  push-back-f
+   "<<&" push-back-enlist-f
    "@"   compose-f))
 
 (: core-table (Immutable-HashTable String (List Integer core-signature)))

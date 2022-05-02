@@ -157,6 +157,14 @@
      (cons-lex 'semicolon ";" d line)]
     [`(#\, . ,d)
      (cons-lex 'comma "," d line)]
+    [`(#\& #\> #\> . ,d)
+     (cons-lex 'binop "&>>" d line)]
+    [`(#\& #\> . ,d)
+     (cons-lex 'binop "&>" d line)]
+    [`(#\< #\< #\& . ,d)
+     (cons-lex 'binop "<<&" d line)]
+    [`(#\< #\& . ,d)
+     (cons-lex 'binop "<&" d line)]
     [`(#\- #\> . ,d)
      (cons-lex 'right-arrow "->" d line)]
     [`(#\< #\- . ,d)

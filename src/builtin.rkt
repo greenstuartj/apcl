@@ -1139,6 +1139,41 @@
                        (Unary v (Nil)))
            ic e)])))
 
+(: concatenate-f core-signature)
+(define (concatenate-f ev)
+  (lambda (tl ic e)
+    (match tl
+      [(list v)
+       (ev (append-ast (string->ast "\\: reduce (&)")
+                       (Unary v (Nil)))
+           ic e)])))
+
+(: round-f core-signature)
+(define (round-f ev)
+  (lambda (tl ic e)
+    (match tl
+      [(list dp n)
+       (ev (append-ast (string->ast "\\dp n: let m: 10^dp in (/m) floor 0.5 + n*m")
+                       (Unary dp (Unary n (Nil))))
+           ic e)])))
+
+(: flip-f core-signature)
+(define (flip-f ev)
+  (lambda (tl ic e)
+    (match tl
+      [(list f x y)
+       (ev (Unary f (Unary y (Unary x (Nil))))
+           ic e)])))
+
+(: join-f core-signature)
+(define (join-f ev)
+  (lambda (tl ic e)
+    (match tl
+      [(list s a b)
+       (ev (append-ast (string->ast "\\s a b: a & s &>> b")
+                       (Unary s (Unary a (Unary b (Nil)))))
+           ic e)])))
+
 ; group_n
 ; index_where
 ; uppercase
@@ -1225,6 +1260,10 @@
    "random" (list 0 random-f)
    "roll" (list 1 roll-f)
    "sum" (list 1 sum-f)
+   "concat" (list 1 concatenate-f)
+   "round" (list 2 round-f)
+   "flip" (list 3 flip-f)
+   "join" (list 3 join-f)
    "type_of" (list 1 type-of-f)
    "is_number" (list 1 (is-type "number"))
    "is_bool" (list 1 (is-type "bool"))

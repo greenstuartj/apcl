@@ -41,14 +41,48 @@
       [(null? ks) ic3]
       [else (loop (cdr ks) (hash-set ic3 (car ks) (hash-ref ic1 (car ks))))])))
 
-(: eval-ast
-   (-> (AST Type)
-       (IContext Type)
-       (Environment Type (AST Type))
-       (Either (AST Type) String)))
+(define-type eval-signature 
+  (-> (AST Type)
+      (IContext Type)
+      (Environment Type (AST Type))
+      (Either (AST Type) String)))
+  
+(: eval-ast eval-signature)
 (define (eval-ast ast icontext environment)
   (match ast
     [(Nil) (Ok (Nil))]
+    [(Unary (IdentifierT _) _)
+     (handle-identifier ast icontext environment)]
+    [(Unary (LambdaT _ _ _) _)
+     (handle-lambda ast icontext environment)]
+    [(Unary (BuiltinT _ _ _) _)
+     (handle-builtin ast icontext environment)]
+    [(Unary (GroupT _) _)
+     (handle-group ast icontext environment)]
+    [(Unary (IfT _ _ _) _)
+     (handle-if ast icontext environment)]
+    [(Binary (SetT _ _) _ _)
+     (handle-set ast icontext environment)]
+    [(Binary (RefT _ _) _ _)
+     (handle-ref ast icontext environment)]
+    [(Unary (RefT _ _) _)
+     (handle-ref ast icontext environment)]
+    [(Unary (BinopT _ _ _) _)
+     (handle-binop ast icontext environment)]
+    [(Binary (BinopT _ _ _) _ _)
+     (handle-binop ast icontext environment)]
+    [(Unary (LiteralVectorT v) next)
+     (handle-literal-vector ast icontext environment)]
+    [(Unary (LiteralModuleT _) _)
+     (handle-literal-module ast icontext environment)]
+    [(Unary v next)
+     (inject-either (lambda ([x : (AST Type)])
+                      (Unary v x))
+                    (eval-ast next icontext environment))]))
+
+(: handle-identifier eval-signature)
+(define (handle-identifier ast icontext environment)
+  (match ast
     [(Unary (IdentifierT name) next)
      (let ([result (hash-ref icontext name #f)])
        (if result
@@ -59,11 +93,11 @@
                 (let ([result3 (hash-ref core-table name #f)])
                   (match result3
                     [(list n b)
-                      (eval-ast (Unary (BuiltinT n '() (b eval-ast)) next)
-                                icontext
-                                environment)]
+                     (eval-ast (Unary (BuiltinT n '() (b eval-ast)) next)
+                               icontext
+                               environment)]
                     [_
-                      (Fail (string-append "[ERROR] " name " is undefined"))]))]
+                     (Fail (string-append "[ERROR] " name " is undefined"))]))]
                [(Def v #f _)
                 (eval-ast (append-ast v next) icontext environment)]
                [(Def _ #t p)
@@ -74,7 +108,11 @@
                                 name
                                 (Def nv #f p))
                      (eval-ast (append-ast nv next) icontext environment)]
-                    [(Fail x) (Fail x)]))]))))]
+                    [(Fail x) (Fail x)]))]))))]))
+
+(: handle-lambda eval-signature)
+(define (handle-lambda ast icontext environment)
+  (match ast
     [(Unary (LambdaT (list) nic body) next)
      (let ([nb (eval-ast body (combine-icontext nic icontext) environment)]
            [next2 (eval-ast next icontext environment)])
@@ -93,16 +131,21 @@
        (match next2
          [(Fail x) (Fail x)]
          [(Ok (Nil)) (Ok (Unary (LambdaT args nic body) (Nil)))]
-         [(Ok next3) (let loop ([n : (AST Type) next3]
-                                [a : (Listof String) args]
-                                [nnic : (IContext Type) nic])
-                       (match (list a n)
-                         [(list '() next4)
-                          (eval-ast (Unary (LambdaT '() nnic body) n) icontext environment)]
-                         [(list a2 (Nil))
-                          (Ok (Unary (LambdaT a2 nnic body) (Nil)))]
-                         [(list `(,a2 . ,d) (Unary t r))
-                          (loop r d (hash-set nnic a2 t))]))]))]
+         [(Ok next3)
+          (let loop ([n : (AST Type) next3]
+                     [a : (Listof String) args]
+                     [nnic : (IContext Type) nic])
+            (match (list a n)
+              [(list '() next4)
+               (eval-ast (Unary (LambdaT '() nnic body) n) icontext environment)]
+              [(list a2 (Nil))
+               (Ok (Unary (LambdaT a2 nnic body) (Nil)))]
+              [(list `(,a2 . ,d) (Unary t r))
+               (loop r d (hash-set nnic a2 t))]))]))]))
+
+(: handle-builtin eval-signature)
+(define (handle-builtin ast icontext environment)
+  (match ast
     [(Unary (BuiltinT 0 args body) next)
      (inject-either
       (lambda ([x : (AST Type)])
@@ -114,10 +157,17 @@
      (let ((result (eval-ast next icontext environment)))
        (match result
          [(Ok x) (let ((b (collect-types x n args)))
-                   (eval-ast (Unary (BuiltinT (second b) (third b) body) (first b))
+                   (eval-ast (Unary (BuiltinT (second b)
+                                              (third b)
+                                              body)
+                                    (first b))
                              icontext
                              environment))]
-         [(Fail x) (Fail x)]))]
+         [(Fail x) (Fail x)]))]))
+
+(: handle-group eval-signature)
+(define (handle-group ast icontext environment)
+  (match ast
     [(Unary (GroupT g) next)
      (let ((result (eval-ast g icontext environment)))
        (match result
@@ -125,7 +175,11 @@
                    (match next2
                      [(Ok y) (eval-ast (append-ast x y) icontext environment)]
                      [(Fail y) (Fail y)]))]
-         [(Fail x) (Fail x)]))]
+         [(Fail x) (Fail x)]))]))
+
+(: handle-if eval-signature)
+(define (handle-if ast icontext environment)
+  (match ast
     [(Unary (IfT test t f) next)
      (let ([result (eval-ast test icontext environment)])
        (match result
@@ -137,7 +191,11 @@
          [(Ok (Unary (OptionT) _))
           (eval-ast (append-ast f next) icontext environment)]
          [_
-          (eval-ast (append-ast t next) icontext environment)]))]
+          (eval-ast (append-ast t next) icontext environment)]))]))
+
+(: handle-set eval-signature)
+(define (handle-set ast icontext environment)
+  (match ast
     ; TDOD: SETTING
     [(Binary (SetT #f #f) (Binary (RefT #f #f) lhs rhs) value)
      (let ([left (eval-ast lhs icontext environment)])
@@ -148,7 +206,9 @@
              (match (eval-ast value icontext environment)
                [(Fail x) (Fail x)]
                [(Ok x)
-                (match (add-statement (Definition name (Unary (LambdaT '() (hash) x) (Nil)))
+                (match (add-statement (Definition name
+                                        (Unary (LambdaT '() (hash) x)
+                                               (Nil)))
                                       e)
                   [(Fail x) (Fail x)]
                   [_ (Ok (Unary (ModuleT e) next))])])]
@@ -173,7 +233,11 @@
                                   icontext environment)])
             (Fail "[ERROR] integer expected when setting vector"))]
        [_
-        (Fail "[ERROR] set type mismatch")])]
+        (Fail "[ERROR] set type mismatch")])]))
+
+(: handle-ref eval-signature)
+(define (handle-ref ast icontext environment)
+  (match ast
     [(Binary (RefT #f #f) lhs rhs)
      (let ([left (eval-ast lhs icontext environment)])
        (match left
@@ -201,7 +265,11 @@
                       icontext environment)
             (Fail "[ERROR] integer expected when referencing vector"))]
        [_
-        (Fail "[ERROR] reference type mismatch")])]
+        (Fail "[ERROR] reference type mismatch")])]))
+
+(: handle-binop eval-signature)
+(define (handle-binop ast icontext environment)
+  (match ast
     [(Unary (BinopT #f #f b) next)
      (let ([next2 (eval-ast next icontext environment)])
        (match next2
@@ -250,21 +318,24 @@
          [(list (Ok (Unary l (Nil))) (Ok (Unary r next)))
           (eval-ast (Unary (BinopT l r b) next) icontext environment)]
          [_
-          (Fail "[ERROR] multi-value expression on left side of infix operator")]))]
+          (Fail "[ERROR] multi-value expression on left side of infix operator")]))]))
+
+(: handle-literal-vector eval-signature)
+(define (handle-literal-vector ast icontext environment)
+  (match ast
     [(Unary (LiteralVectorT v) next)
      (let ([nv (eval-vector v icontext environment)])
        (let ([next2 (eval-ast next icontext environment)])
          (match (list nv next2)
            [(list (Ok x) (Ok y)) (Ok (Unary (VectorT x) y))]
            [(list (Ok x) (Fail y)) (Fail y)]
-           [(list (Fail x) _) (Fail x)])))]
-    [(Unary (LiteralModuleT _) _)
-     (Fail "[ERROR] modules can only be used in definitions")]
-    [(Unary v next)
-     (inject-either (lambda ([x : (AST Type)])
-                      (Unary v x))
-                    (eval-ast next icontext environment))]))
+           [(list (Fail x) _) (Fail x)])))]))
 
+(: handle-literal-module eval-signature)
+(define (handle-literal-module ast icontext environment)
+  (match ast
+    [(Unary (LiteralModuleT _) _)
+     (Fail "[ERROR] modules can only be used in definitions")]))
 
 ;; STATEMENTS
 

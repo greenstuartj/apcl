@@ -6,24 +6,25 @@
 (require "../../src/interpreter.rkt")
 (provide Tests Name Given When Then)
 
-(define (Tests . results)
+(define (Tests name . results)
   (let ([fails (filter string? results)])
     (if (null? fails)
-        (displayln "ALL TESTS PASSING")
-        (display (string-join fails)))))
+        (displayln (format "ALL ~a TESTS PASSING" name))
+        (display (string-append name " TESTS FAILING:\n" (string-join fails))))))
 
 (define (Then expected)
   (lambda (name)
     (lambda (env result)
-      (let ([eval-expected (match (interpret expected env)
-                               [(Ok x) x]
-                               [(Fail x) x])])
+      (let ([eval-expected (if (string-prefix? expected "[ERROR]")
+                               expected
+                               (match (interpret expected env)
+                                 [(Ok x) x]
+                                 [(Fail x) x]))])
         (let ([trimmed-result (string-trim result)]
               [trimmed-expected (string-trim eval-expected)])
           (if (equal? trimmed-result trimmed-expected)
               #f
-              (format "
---- TEST FAILED ---
+              (format "--- TEST FAILED ---
 TEST NAME: ~a
 EXPECTED:  ~a
 ACTUAL:    ~a

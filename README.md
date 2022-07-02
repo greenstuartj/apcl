@@ -1,6 +1,6 @@
 # APCL
 
-##Adaptive Parameter Calculator Language
+## Adaptive Parameter Calculator Language
 
 An incremental functional language designed for exploring parameter tweaking in calculations
 

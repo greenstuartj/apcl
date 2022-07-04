@@ -169,6 +169,20 @@
        (When "m->x<-10"
              "m->result")
        (Then "5"))
+
+ (Name "new module"
+       (Given
+        "
+        m: {
+          input n;
+          result: n*2;
+        };
+        ")
+       (When "m2: new m;"
+             "m2->n<-10"
+             "m->n<-2"
+             "[m2->result, m->result]")
+       (Then "[20, 4]"))
        
  )
 

@@ -196,7 +196,7 @@
 (: handle-set eval-signature)
 (define (handle-set ast icontext environment)
   (match ast
-    ; TDOD: SETTING
+    ; TODO: SETTING
     [(Binary (SetT #f #f) (Binary (RefT #f #f) lhs rhs) value)
      (let ([left (eval-ast lhs icontext environment)])
        (match left

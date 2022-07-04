@@ -24,7 +24,8 @@
 
          show-type
          depends-type
-         string-type)
+         string-type
+         copy-type)
 
 (define-type Type
   (U IdentifierT
@@ -224,3 +225,29 @@
     [(SetT _ _)         "set"]
     [(LiteralModuleT _) "module"]
     [(ModuleT _)        "module"]))
+
+(: copy-type (-> Type Type))
+(define (copy-type t)
+  (match t
+    [(ModuleT (Environment inputs defs depends))
+     (let [(new-inputs : (Mutable-HashTable String (Mutable-Vectorof (AST Type)))
+                       (make-hash))
+           (new-defs : (Mutable-HashTable String (Def Type))
+                     (make-hash))
+           (new-depends : (Mutable-HashTable String (Setof String))
+                        (make-hash))]
+       (hash-for-each inputs (lambda ([k : String] [v : (Mutable-Vectorof (AST Type))])
+                               (hash-set! new-inputs k v)))
+       (hash-for-each defs (lambda ([k : String] [v : (Def Type)])
+                             (match v
+                               [(Def val re fun)
+                                (hash-set! new-defs k
+                                           (Def ((copy-ast copy-type) val) re fun))])))
+       (hash-for-each depends (lambda ([k : String] [v : (Setof String)])
+                                (hash-set! new-depends k v)))
+       (ModuleT (Environment new-inputs new-defs new-depends)))]
+    [(StringT s)
+     (StringT (vector-copy s))]
+    [(VectorT v)
+     (VectorT (vector-map (copy-ast copy-type) v))]
+    [_ t]))

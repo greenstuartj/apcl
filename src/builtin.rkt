@@ -1174,6 +1174,12 @@
                        (Unary s (Unary a (Unary b (Nil)))))
            ic e)])))
 
+(: new-f core-signature)
+(define (new-f ev)
+  (lambda (tl ic e)
+    (match tl
+      [(list t) (s-un (copy-type t))])))
+
 ; group_n
 ; index_where
 ; uppercase
@@ -1265,6 +1271,7 @@
    "flip" (list 3 flip-f)
    "join" (list 3 join-f)
    "type_of" (list 1 type-of-f)
+   "new" (list 1 new-f)
    "is_number" (list 1 (is-type "number"))
    "is_bool" (list 1 (is-type "bool"))
    "is_string" (list 1 (is-type "string"))

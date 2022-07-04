@@ -1,6 +1,6 @@
 #lang typed/racket
 (require racket/match)
-(provide AST Nil Unary Binary append-ast show-ast depends-ast)
+(provide AST Nil Unary Binary append-ast show-ast depends-ast copy-ast)
 
 (define-type (AST a)
   (U (Unary a)
@@ -52,3 +52,14 @@
       [(Binary t l r) (append (df t)
                               ((depends-ast df) l)
                               ((depends-ast df) r))])))
+
+(: copy-ast (All (a) (-> (-> a a) (-> (AST a) (AST a)))))
+(define (copy-ast ct)
+  (lambda (ast)
+    (match ast
+      [(Nil) (Nil)]
+      [(Unary t next) (Unary (ct t)
+                             ((copy-ast ct) next))]
+      [(Binary t l r) (Binary (ct t)
+                              ((copy-ast ct) l)
+                              ((copy-ast ct) r))])))

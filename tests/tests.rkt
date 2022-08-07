@@ -183,6 +183,22 @@
              "m->n<-2"
              "[m2->result, m->result]")
        (Then "[20, 4]"))
+
+ (Name "module dependencies"
+       (Given
+        "
+        m: {
+          input n;
+          result: n*2;
+        };
+
+        res: (m->result)+10;
+        ")
+       (When "m->n<-4"
+             "res" ; would output 18
+             "m->n<-6"
+             "res")
+       (Then "22"))
        
  )
 

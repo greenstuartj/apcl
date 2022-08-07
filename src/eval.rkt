@@ -211,7 +211,19 @@
                                                (Nil)))
                                       e)
                   [(Fail x) (Fail x)]
-                  [_ (Ok (Unary (ModuleT e) next))])])]
+                  [_ (match (list e environment)
+                       [(list (Environment _ _ dependsM)
+                              (Environment _ _ depends))
+                        (let loop ([keys : (Listof String)
+                                         (apply append
+                                          (map (lambda ([key : String])
+                                                 (get-dependants key depends))
+                                               (get-dependants name dependsM)))])
+                          (cond
+                            [(null? keys) (Ok #t)]
+                            [else (set-Def-recalc! (hash-ref (Environment-defs environment) (car keys)) #t)
+                                  (loop (cdr keys))]))])
+                     (Ok (Unary (ModuleT e) next))])])]
             [_
              (Fail "[ERROR] expected identifier when referencing in a module")])]
          [_

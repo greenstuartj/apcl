@@ -35,6 +35,22 @@ Run with `./apcl`
 37.5
 ```
 
+Source code can also be stored in files with a .apcl extension
+
+These can be loaded into the interpreter by either running the executable with the file as argument
+
+```
+./apcl source.apcl
+```
+
+or it can be imported into the interpreter
+
+```
+./apcl
+    import 'source.apcl'
+```
+
+
 ## Types and Expressions
 
 ### Identifiers

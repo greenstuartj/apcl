@@ -343,7 +343,7 @@ true
 ## Named Functions
 
 ### optional
-Turns none into option
+Turns none into option, and returns its argument for any other value
 
 Useful for when expressing that a parameter doesnt have to be used in an equation
 ```
@@ -364,6 +364,8 @@ none
 gets an index or a vector or a string, starting from index 0
 
 get can use a vector of indicies
+
+negative indicies can be used to access the back of the vector
 ```
    get 0 ['hello', 'world']
 hello
@@ -373,6 +375,21 @@ world
 none
    get [1,0] ['hello', 'world']
 [world, hello]
+   get ~1 [1,2,3]
+3
+```
+
+### slice
+slice is similar to get but takes two integers representing indicies, and it takes all elements from a vector from the first index, upto but not including the second index
+
+the first index must be larger than the second
+
+if the index goes beyond the length of the original vector, none will be used
+```
+   slice 2 5 ['this', 'is', 'a', 'vector', 'of', 'strings']
+[a, vector, of]
+   slice 0 4 [1,2]
+[1, 2, none, none]
 ```
 
 ### index
@@ -425,6 +442,15 @@ reduce uses a function to collapse a vector of values into a single value
    product: reduce (*);
    product [1,2,3,4,5]
 120
+```
+
+### sum
+sum takes a vector of numbers and adds them together
+```
+   sum [1,2,3]
+6
+   sum iota 10
+45
 ```
 
 ### reverse
@@ -674,6 +700,7 @@ results in an error if it cannot be converted
 
 ### string_split
 ### join
+### concat
 ### unique
 ### intersection
 ### id
@@ -682,24 +709,37 @@ results in an error if it cannot be converted
 ### amend_with
 ### reflex
 ### void
-### slice
 ### random
 ### roll
-### sum
-### concat
 ### flip
 ### read_table
 ### read_dsv
 ### read_lines
 ### new
-### type_of
-### is_number
-### is_bool
-### is_string
-### is_vector
-### is_none
-### is_option
-### is_lambda
-### is_builtin
-### is_binop
-### is_module
+
+## Type Checking Functions
+```
+   type_of 10
+number
+   is_number 10
+true
+   is_bool true
+true
+   is_string 'hello'
+true
+   is_vector [1,2,3]
+true
+   is_none none
+true
+   is_option option
+true
+   is_lambda (\n: n+1)
+true
+   is_builtin iota
+true
+   is_binop (+)
+true
+   m: { input n; }
+   is_module m
+true
+```

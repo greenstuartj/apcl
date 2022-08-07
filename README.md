@@ -101,7 +101,7 @@ this is a string
 ```
 
 ### Vectors
-Vectors are collections of values withing square brackets
+Vectors are collections of values within square brackets
 ```
    [1,2,3,4,5]
 [1, 2, 3, 4, 5]

@@ -39,6 +39,7 @@ Run with `./apcl`
 
 ### Identifiers
 Identifiers are names given to values or functions
+
 Identifiers marked as input can be changed
 ```
     x: 10;
@@ -92,6 +93,7 @@ Vectors are collections of values withing square brackets
 
 ### None
 None represents no value, or a failure
+
 It propogates itself in binary expressions
 ```
     none
@@ -102,6 +104,7 @@ none
 
 ### Option
 Option represents a value that doesnt need to be used
+
 It removes itself from binary expressions
 ```
     option
@@ -112,6 +115,7 @@ option
 
 ### If
 If expressions can be used for branching
+
 false and none lead to the else branch
 ```
     if true then 1 else 0
@@ -143,6 +147,7 @@ Let expressions can be used to storing intermediate values for convenience
 
 ### Modules (Experimental)
 Modules can be used for grouping code together
+
 Currently not finished
 ```
     m: { input n; result: n*2; };
@@ -323,6 +328,7 @@ true
 
 ### optional
 Turns none into option
+
 Useful for when expressing that a parameter doesnt have to be used in an equation
 ```
     input important;
@@ -340,6 +346,7 @@ none
 
 ### get
 gets an index or a vector or a string, starting from index 0
+
 get can use a vector of indicies
 ```
     get 0 ['hello', 'world']
@@ -354,6 +361,7 @@ none
 
 ### index
 index finds all positions of an element in a vector or string
+
 index can use a vector or string of elements
 ```
     index 'vector' ['here', 'is', 'a', 'vector', 'of', 'strings']
@@ -441,9 +449,12 @@ length gets the number of elements in a vector or string
 
 ### replicate
 replicate takes 2 arguments
+
 1. a vector or integers or bools
 2. a vector or string the same length as the vector in the first argument
+
 replicate then replicates each element in the second argument by the number in the first vector (or by one if true, and by zero if false)
+
 when combined with map, this can be used for filtering
 ```
     replicate [1,2,3] ['a', 'b', 'c']

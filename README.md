@@ -58,29 +58,29 @@ Identifiers are names given to values or functions
 
 Identifiers marked as input can be changed
 ```
-    x: 10;
-    x
+   x: 10;
+   x
 10
-    f n: n+1;
-    f x
+   f n: n+1;
+   f x
 11
-    x: 11
+   x: 11
 [ERROR] definition of 'x' already exists as non-input
-    input y;
-    y: 10
-    y
+   input y;
+   y: 10
+   y
 10
-    y: 11
-    y
+   y: 11
+   y
 11
 ```
 
 ### Numbers
 Numbers can be whole numbers or decimals
 ```
-    10
+   10
 10
-    4.6
+   4.6
 4.6
 ```
 
@@ -96,14 +96,14 @@ false
 ### Strings
 Strings are collections of characters within single quotes
 ```
-    'this is a string'
+   'this is a string'
 this is a string
 ```
 
 ### Vectors
 Vectors are collections of values withing square brackets
 ```
-    [1,2,3,4,5]
+   [1,2,3,4,5]
 [1, 2, 3, 4, 5]
 ```
 
@@ -112,9 +112,9 @@ None represents no value, or a failure
 
 It propogates itself in binary expressions
 ```
-    none
+   none
 none
-    none+1
+   none+1
 none
 ```
 
@@ -123,9 +123,9 @@ Option represents a value that doesnt need to be used
 
 It removes itself from binary expressions
 ```
-    option
+   option
 option
-    option+1
+   option+1
 1
 ```
 
@@ -134,30 +134,30 @@ If expressions can be used for branching
 
 false and none lead to the else branch
 ```
-    if true then 1 else 0
+   if true then 1 else 0
 1
-    if false then 1 else 0
+   if false then 1 else 0
 0
-    if 10>3 then 'bigger' else 'smaller'
+   if 10>3 then 'bigger' else 'smaller'
 bigger
 ```
 
 ### Lambda
 Lambda functions are anonymous functions if naming isnt needed
 ```
-    named_function n: n+1;
-    named_function 10
+   named_function n: n+1;
+   named_function 10
 11
-    (\n: n+1) 10
+   (\n: n+1) 10
 11
-    (\n m: n*m) 10 2
+   (\n m: n*m) 10 2
 20
 ```
 
 ### Let
 Let expressions can be used to storing intermediate values for convenience
 ```
-    let m: 10+2 in m*m
+   let m: 10+2 in m*m
 144
 ```
 
@@ -166,9 +166,9 @@ Modules can be used for grouping code together
 
 Currently not finished
 ```
-    m: { input n; result: n*2; };
-    m->n<-10
-    m->result
+   m: { input n; result: n*2; };
+   m->n<-10
+   m->result
 20
 ```
 
@@ -176,167 +176,167 @@ Currently not finished
 
 ### Add +
 ```
-    1+2
+   1+2
 3
 ```
 
 ### Minus -
 ```
-    10-3
+   10-3
 7
 ```
 
 ### Multiply *
 ```
-    10*2
+   10*2
 20
 ```
 
 ### Divide /
 ```
-    10/2
+   10/2
 5
 ```
 
 ### Power ^
 ```
-    10^2
+   10^2
 100
 ```
 
 ### Modulo %
 ```
-    10%2
+   10%2
 0
 ```
 
 ### Minimum <.
 ```
-    10 <. 4
+   10 <. 4
 4
 ```
 
 ### Maximum >.
 ```
-    10 >.4
+   10 >.4
 10
 ```
 
 ### Equal =
 ```
-    6=6
+   6=6
 true
-    5=6
+   5=6
 false
 ```
 
 ### Not Equal !=
 ```
-    6!=6
+   6!=6
 false
-    5!=6
+   5!=6
 true
 ```
 
 ### Less Than <
 ```
-    10<2
+   10<2
 false
 ```
 
 ### Less Than or Equal <=
 ```
-    10<=2
+   10<=2
 false
 ```
 
 ### Greater Than >
 ```
-    10>2
+   10>2
 true
 ```
 
 ### Greater Than or Equal >=
 ```
-    10>=2
+   10>=2
 true
 ```
 
 ### Or or
 ```
-    true or false
+   true or false
 true
-    false or false
+   false or false
 false
 ```
 
 ### And and
 ```
-    true and true
+   true and true
 true
-    true and false
+   true and false
 false
 ```
 
 ### Concatenate &
 ```
-    [1, 2, 3] & [4, 5, 6]
+   [1, 2, 3] & [4, 5, 6]
 [1, 2, 3, 4, 5, 6]
-    'hello' & 'world'
+   'hello' & 'world'
 helloworld
 ```
 
 ### Push Front &>
 ```
-    1 &> [2]
+   1 &> [2]
 [1, 2]
 ```
 
 ### Push Front and Enlist &>>
 ```
-    1 &>> 2
+   1 &>> 2
 [1, 2]
 ```
 
 ### Push Back <&
 ```
-    [1] <& 2
+   [1] <& 2
 [1, 2]
 ```
 
 ### Push Back and Enlist <<&
 ```
-    1 <<& 2
+   1 <<& 2
 [1, 2]
 ```
 
 ### Compose @
 ```
-    ((+1) @ (+2)) 10
+   ((+1) @ (+2)) 10
 13
-    (sum @ iota) 101
+   (sum @ iota) 101
 5050
 ```
 
 ### Negate ~
 ```
-    ~10
+   ~10
 -10
 ```
 
 ### Abs |
 ```
-    |10
+   |10
 10
-    |~10
+   |~10
 10
 ```
 
 ### Not !
 ```
-    !true
+   !true
 false
-    !false
+   !false
 true
 ```
 
@@ -347,16 +347,16 @@ Turns none into option
 
 Useful for when expressing that a parameter doesnt have to be used in an equation
 ```
-    input important;
-    input unimportant;
-    equation: important + optional unimportant;
-    equation
+   input important;
+   input unimportant;
+   equation: important + optional unimportant;
+   equation
 none
-    important: 10
-    equation
+   important: 10
+   equation
 10
-    unimportant: 5
-    equation
+   unimportant: 5
+   equation
 15
 ```
 
@@ -365,13 +365,13 @@ gets an index or a vector or a string, starting from index 0
 
 get can use a vector of indicies
 ```
-    get 0 ['hello', 'world']
+   get 0 ['hello', 'world']
 hello
-    get 1 ['hello', 'world']
+   get 1 ['hello', 'world']
 world
-    get 2 ['hello', 'world']
+   get 2 ['hello', 'world']
 none
-    get [1,0] ['hello', 'world']
+   get [1,0] ['hello', 'world']
 [world, hello]
 ```
 
@@ -380,86 +380,99 @@ index finds all positions of an element in a vector or string
 
 index can use a vector or string of elements
 ```
-    index 'vector' ['here', 'is', 'a', 'vector', 'of', 'strings']
+   index 'vector' ['here', 'is', 'a', 'vector', 'of', 'strings']
 [3]
-    index 'l' 'hello'
+   index 'l' 'hello'
 [2, 3]
-    index ['o', 'e'] 'hello'
+   index ['o', 'e'] 'hello'
 [[4], [1]]
-    index 'oe' 'hello'
+   index 'oe' 'hello'
 [[4], [1]]
 ```
 
 ### iota
 iota generates a vector of contiguous integers from 0 upto (but not including) its argument
 ```
-    iota 10
+   iota 10
 [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-    iota 3
+   iota 3
 [0, 1, 2]
 ```
 
 ### map
 map takes a function and applied it to each element of a vector or string
 ```
-    (map (\n: n*2)) iota 5
+   (map (\n: n*2)) iota 5
 [0, 2, 4, 6, 8]
-    (map (*2)) iota 5
+   (map (*2)) iota 5
 [0, 2, 4, 6, 8]
-    (map id) 'hello'
+   (map id) 'hello'
 [h, e, l, l, o]
 ```
 
 ### filter
 filter takes a function and a vector or string and removes each element when the function applied return false or none
 ```
-    (filter (>5)) iota 10
+   (filter (>5)) iota 10
 [6, 7, 8, 9]
 ```
 
 ### reduce
 reduce uses a function to collapse a vector of values into a single value
 ```
-    (reduce (*)) [1,2,3,4,5]
+   (reduce (*)) [1,2,3,4,5]
 120
-    product: reduce (*);
-    product [1,2,3,4,5]
+   product: reduce (*);
+   product [1,2,3,4,5]
 120
 ```
 
 ### reverse
 reverse reverses a vector or string
 ```
-    reverse iota 5
+   reverse iota 5
 [4, 3, 2, 1, 0]
-    reverse 'hello'
+   reverse 'hello'
 olleh
+```
+
+### rotate
+rotate shifts all elements in a vector or string by a number
+
+negative numbers shift elements the other direction
+```
+   rotate 1 [1,2,3]
+[2, 3, 1]
+   rotate 2 [1,2,3]
+[3, 1, 2]
+   rotate ~1 [1,2,3]
+[3, 1, 2]
 ```
 
 ### drop
 drop removes the first n elements from a vector or string
 ```
-    drop 2 [1, 2, 3, 4, 5]
+   drop 2 [1, 2, 3, 4, 5]
 [3, 4, 5]
-    drop 3 'hello'
+   drop 3 'hello'
 lo
 ```
 
 ### take
 take takes the first n elements from a vector or string
 ```
-    take 2 [1, 2, 3, 4, 5]
+   take 2 [1, 2, 3, 4, 5]
 [1, 2]
-    take 3 'hello'
+   take 3 'hello'
 hel
 ```
 
 ### length
 length gets the number of elements in a vector or string
 ```
-    length [1,2,3]
+   length [1,2,3]
 3
-    length 'hello'
+   length 'hello'
 5
 ```
 
@@ -473,75 +486,200 @@ replicate then replicates each element in the second argument by the number in t
 
 when combined with map, this can be used for filtering
 ```
-    replicate [1,2,3] ['a', 'b', 'c']
+   replicate [1,2,3] ['a', 'b', 'c']
 [a, b, b, c, c, c]
-    replicate [true, false, true, false] [1,2,3,4]
+   replicate [true, false, true, false] [1,2,3,4]
 [1, 3]
-    is_even n: (n%2)=0;
-    let numbers: iota 10 in replicate (map is_even) numbers numbers
+   is_even n: (n%2)=0;
+   let numbers: iota 10 in replicate (map is_even) numbers numbers
 [0, 2, 4, 6, 8]
-    my_filter f v: replicate (map f) v v
-    (my_filter is_even) iota 10
+   my_filter f v: replicate (map f) v v
+   (my_filter is_even) iota 10
 [0, 2, 4, 6, 8]
 ```
 
 ### scan
 scan works like reduce, but creates a vector of all its intermediary steps
 ```
-    (scan (+)) iota 10
+   (scan (+)) iota 10
 [0, 1, 3, 6, 10, 15, 21, 28, 36, 45]
-    (reduce (+)) iota 10
+   (reduce (+)) iota 10
 45
-    cumulative_sum: scan (+);
-    cumulative_sum [1,2,3]
+   cumulative_sum: scan (+);
+   cumulative_sum [1,2,3]
 [1, 3, 6]
 ```
 
 ### scan_n
 scan_n takes an integer representing the size of a sliding window to reduce over a vector
 ```
-    (scan_n (+)) 2 [1,2,3]
+   (scan_n (+)) 2 [1,2,3]
 [3, 5]
-    moving_average n v: (map (/n)) (scan_n (+)) n v;
-    moving_average 3 [2,6,4,8,24,16]
+   moving_average n v: (map (/n)) (scan_n (+)) n v;
+   moving_average 3 [2,6,4,8,24,16]
 [4, 6, 12, 16]
 ```
 
 ### zip
 zip takes two vectors and combines them linearly into a vector or two elements, representing their pairs
 ```
-    zip [1,2,3] [10,20,30]
+   zip [1,2,3] [10,20,30]
 [[1, 10], [2, 20], [3, 30]]
 ```
 
 ### zip_with
 zip_with is similar to zip, but instead of combining their pairs into vectors, it uses a function to combine the pairs
 ```
-    (zip_with (+)) [1,2,3] [10,20,30]
+   (zip_with (+)) [1,2,3] [10,20,30]
 [11, 22, 33]
 ```
 
 ### member
-### repeat
+checks if an element is contained within a vector, or if a substring is contained within a string
+```
+   member 2 [1,2,3]
+true
+   member 5 [1,2,3]
+false
+   member 'ab' 'abcde'
+true
+```
+
 ### floor
+floor rounds down to the nearest whole number
+```
+   floor 4.3
+4
+```
+
 ### ceiling
+ceiling rounds up to the nearest whole number
+```
+   ceiling 4.3
+5
+```
+
+### round
+round takes a number of significant digits and a decimal number to round to that many significant figures
+```
+   round 2 3.14159265359
+3.14
+   round 5 3.14159265359
+3.14159
+```
+
+### repeat
+repeat applies a function n times over a value
+
+the example below applies the function double 5 times, over the initial value of 2
+```
+   double n: n*2;
+   (repeat double) 5 2
+64
+```
+
 ### seq
+seq is similar to repeat, but generates a vector with each step recorded
+
+however, it generates a vector of n length, rather than applying the function n times
+```
+   double n: n*2;
+   (seq double) 5 2
+[2, 4, 8, 16, 32]
+```
+
 ### while
-### rotate
+while takes 2 functions and an initial value
+
+the first function is applied to the value, and if the result if false or none, the while function stop
+
+the second function is applied to the value on each iteration
+
+in the example below, after successive doubling, the initial value eventually reaches above 1000 and the while function stops
+```
+   double n: n*2;
+   continue n: n<1000;
+   ((while continue) double) 2
+1024
+```
+
 ### string_to_vector
+string_to_vector breaks a string into a vector of strings consisting of each character from the original string
+```
+   string_to_vector 'hello'
+[h, e, l, l, o]
+```
+
 ### catalogue
+catalogue takes two vectors and creates a cartesian product of all possible pairs
+```
+   catalogue [1,2,3] [10,20,30]
+[[[1, 10], [1, 20], [1, 30]], [[2, 10], [2, 20], [2, 30]], [[3, 10], [3, 20], [3, 30]]]
+```
+
 ### catalogue_with
-### string
-### transpose
+catalogue_with is similar to catalogue, but takes a function to combine the pairs instead of making a two element vector
+```
+   (catalogue_with (*)) [1,2,3] [10,20,30]
+[[10, 20, 30], [20, 40, 60], [30, 60, 90]]
+```
+
 ### show_table
+show_table takes a vector of vectors of of equal length and produces a string spanning several lines with each field separated by a tab
+
+doesnt always result in an easy to read table due to naive use of tabs
+```
+   show_table [[1,2,3], [4,5,6], [7,8,9]]
+1	4	7
+2	5	8
+3	6	9
+```
+
+### transpose
+transpose reflects a vector of vectors of equal length along its diagonal
+```
+   transpose [[1,2,3], [4,5,6], [7,8,9]]
+[[1, 4, 7], [2, 5, 8], [3, 6, 9]]
+   show_table [[1,2,3], [4,5,6], [7,8,9]]
+1	4	7
+2	5	8
+3	6	9
+   show_table transpose [[1,2,3], [4,5,6], [7,8,9]]
+1	2	3
+4	5	6
+7	8	9
+```
+
+### string
+string takes a value and returns its string representation
+```
+   10 & '!'
+[ERROR] &: type mismatch
+   (string 10) & '!'
+10!
+```
+
 ### string_to_number
+string_to_number takes a string and attempts to convert it to a number
+
+results in an error if it cannot be converted
+```
+   '10'*2
+[ERROR] *: non-numeric type
+   (string_to_number '10')*2
+20
+   string_to_number '1x0'
+[ERROR] string_to_number: invalid number conversion '1x0'
+```
+
 ### string_split
+### join
 ### unique
+### intersection
 ### id
 ### const
 ### amend
 ### amend_with
-### intersection
 ### reflex
 ### void
 ### slice
@@ -549,9 +687,7 @@ zip_with is similar to zip, but instead of combining their pairs into vectors, i
 ### roll
 ### sum
 ### concat
-### round
 ### flip
-### join
 ### read_table
 ### read_dsv
 ### read_lines

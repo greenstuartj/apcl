@@ -129,7 +129,7 @@ Lambda functions are anonymous functions if naming isnt needed
     named_function 10
 11
     (\n: n+1) 10
-10
+11
     (\n m: n*m) 10 2
 20
 ```

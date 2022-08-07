@@ -141,7 +141,7 @@ Let expressions can be used to storing intermediate values for convenience
 144
 ```
 
-# Modules (Experimental)
+### Modules (Experimental)
 Modules can be used for grouping code together
 Currently not finished
 ```

@@ -688,34 +688,218 @@ string takes a value and returns its string representation
 ### string_to_number
 string_to_number takes a string and attempts to convert it to a number
 
-results in an error if it cannot be converted
+returns none if it cannot be converted
 ```
    '10'*2
 [ERROR] *: non-numeric type
    (string_to_number '10')*2
 20
    string_to_number '1x0'
-[ERROR] string_to_number: invalid number conversion '1x0'
+none
 ```
 
 ### string_split
+string_split splits a string on a substring and returns a vector of strings
+
+the first argument is the substring used to split string from the second argument
+```
+   string_split '-' 'some-text-separated-by-hyphens'
+[some, text, separated, by, hyphens]
+   string_split 'll' 'hello'
+[he, o]
+```
+
 ### join
+join takes joines either 2 strings or 2 vectors using an element to insert between them
+
+the first argument is the element to insert between
+```
+   join ' ' 'hello' 'world'
+hello world
+   join '-' 'hello' 'world'
+hello-world
+   join 4 [1,2,3] [5,6,7]
+[1, 2, 3, 4, 5, 6, 7]
+   (reduce join '\n') string_split ' ' 'words in a sentence on different lines'
+words
+in
+a
+sentence
+on
+different
+lines
+```
+
 ### concat
+concat takes a vector of vectors or a vector of strings and concatenates each element together
+```
+   concat [[1,2,3], [4,5,6], [7,8,9]]
+[1, 2, 3, 4, 5, 6, 7, 8, 9]
+   concat ['here', 'is', 'some', 'split', 'text']
+hereissomesplittext
+```
+
 ### unique
+unique removes duplicate elements in a vector, or duplicate characters in a string
+```
+   unique 'hello'
+helo
+   unique [1,1,7,2,1,3,4,2,3,1,5]
+[1, 7, 2, 3, 4, 5]
+```
+
 ### intersection
+intersection returns a vector of the common elements of 2 vectors, or the common characters of 2 strings
+
+result will be the unique common elements, ordered by their appearance in the second argument
+```
+   intersection 'hello' 'world'
+[o, l]
+   intersection [1,2,3,4] [5,4,3,2]
+[4, 3, 2]
+```
+
 ### id
+id returns its argument
+```
+   id 10
+10
+   id 'hello'
+'hello'
+```
+
 ### const
+const takes 2 arguments and returns its first
+```
+   const 10 20
+10
+   const 'hello' 'world'
+hello
+   (map const 1) iota 5
+[1, 1, 1, 1, 1]
+```
+
 ### amend
+amend changes changes an element in a vector, or character in a string, at the specified index
+```
+   amend 0 'hello' [1,2,3]
+[hello, 2, 3]
+   amend 1 'z' 'abc'
+azc
+```
+
 ### amend_with
+amend_with is similar to amend, but it uses a function to change the existing value, rather than supplying a new value
+```
+   (amend_with (+10)) 0 [1,2,3]
+[11, 2, 3]
+   (amend_with (+10)) 2 [1,2,3]
+[1, 2, 13]
+   (amend_with (\c: if c='b' then 'z' else 'n')) 1 'abc'
+azc
+   (amend_with (\c: if c='b' then 'z' else 'n')) 2 'abc'
+abn
+```
+
 ### reflex
+reflex takes a function that takes 2 arguments, and applies it to a single argument twice
+```
+   (reflex (+)) 10
+20
+   double: reflex (+);
+   double 2
+4
+   square: reflex (*);
+   square 6
+36
+```
+
 ### void
+void takes and argument and returns nothing
+```
+   void 1
+
+
+```
+
 ### random
+random takes no arguments and returns a random number between 0 and 1
+```
+   random
+0.9745691185142792
+   random
+0.06221802112212135
+   random
+0.7056680984746118
+   random
+0.4852263706100838
+   random
+0.031812800703817645
+```
 ### roll
+roll takes an integer and returns an integer between 0 (inclusive) and the integer (uninclusive)
+```
+   roll 6
+5
+   roll 6
+3
+   roll 6
+0
+   roll 6
+1
+```
+
 ### flip
+flip takes a function of two arguments and reverses the order it takes arguments
+```
+   10 - 8
+2
+   (-) 10 8
+2
+   (flip (-)) 10 8
+-2
+```
+
+## Table/File Functions
+Tables are assumed to be a vector of equal length vectors where the subvectors are the columns and the first element is the column header
+
 ### read_table
+read_table reads a csv file
+
+it assumes the csv is comma separated and quoted with double quotes
+
+```
+   read_table 'example.csv'
+```
+
 ### read_dsv
+read_dsv is similar to read_table, but the user can supply the separator and quote characters
+```
+   read_dsv 'example.csv' ',' '\"'
+```
+
 ### read_lines
+read_lines reads each line of a file as a string
+```
+   read_lines 'example.txt'
+```
+
+## Module Functions
+
+Experimental and unfinished
+
 ### new
+new takes a module and returns a deep copy
+```
+   x: { input n; result: n*20; }
+   y: new x;
+   x->n<-10
+   y->n<-20
+   x->result
+200
+   y->result
+400
+```
 
 ## Type Checking Functions
 ```

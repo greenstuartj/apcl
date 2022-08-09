@@ -995,8 +995,7 @@
        (let ([n (string->number (list->string (vector->list s)))])
          (if n
              (s-un (NumberT (cast n Real)))
-             (Fail (format "[ERROR] string_to_number: invalid number conversion '~a'"
-                           (list->string (vector->list s))))))]
+             (s-un (NoneT))))]
       [_ (Fail "[ERROR] string_to_number: string expected")])))
 
 (: string-split-f core-signature)
@@ -1083,7 +1082,7 @@
   (lambda (tl ic e)
     (match tl
       [(list v1 v2)
-       (ev (append-ast (string->ast "\\v1 v2: (reduce (&)) get (index v2 v1) v1")
+       (ev (append-ast (string->ast "\\v1 v2: unique (reduce (&)) get (index v2 v1) v1")
                        (Unary v1 (Unary v2 (Nil))))
            ic e)])))
 

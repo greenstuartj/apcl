@@ -868,14 +868,24 @@ read_table reads a csv file
 
 it assumes the csv is comma separated and quoted with double quotes
 
+anything that can be converted to a number will be converted
+
 ```
    read_table 'example.csv'
 ```
 
 ### read_dsv
 read_dsv is similar to read_table, but the user can supply the separator and quote characters
+
+anything that can be converted to a number will be converted
 ```
    read_dsv 'example.csv' ',' '\"'
+```
+
+### read_dsv_strings
+similar to read_dsv but will keep each field as a string instead of converting to a number
+```
+   read_dsv_strings 'example.csv' ',' '\"'
 ```
 
 ### read_lines

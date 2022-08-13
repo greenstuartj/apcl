@@ -110,18 +110,41 @@
                       (Fail "[ERROR] %: non-integer"))))
             "%"))
 
-; reimplement to get string <. and >.
 (: min-f binop-signature)
-(define min-f
-  (binop-mf (lambda (a b)
-              (s-un (NumberT  (min a b))))
-            "<."))
+(define (min-f a b ic e)
+  (match (list a b)
+    [(list (NoneT) _)
+     (s-un (NoneT))]
+    [(list _ (NoneT))
+     (s-un (NoneT))]
+    [(list (OptionT) _)
+     (s-un b)]
+    [(list _ (OptionT))
+     (s-un a)]
+    [_
+     (match (cmp-help (list a b))
+       [(Ok -1) (s-un a)]
+       [(Ok 0) (s-un a)]
+       [(Ok 1) (s-un b)]
+       [(Fail f) (Fail (f "<."))])]))
 
 (: max-f binop-signature)
-(define max-f
-  (binop-mf (lambda (a b)
-              (s-un (NumberT  (max a b))))
-            ">."))
+(define (max-f a b ic e)
+    (match (list a b)
+    [(list (NoneT) _)
+     (s-un (NoneT))]
+    [(list _ (NoneT))
+     (s-un (NoneT))]
+    [(list (OptionT) _)
+     (s-un b)]
+    [(list _ (OptionT))
+     (s-un a)]
+    [_
+     (match (cmp-help (list a b))
+       [(Ok -1) (s-un b)]
+       [(Ok 0) (s-un b)]
+       [(Ok 1) (s-un a)]
+       [(Fail f) (Fail (f ">."))])]))
 
 ; BINOP COMPARISON FUNCTIONS
 (: eq binop-signature)
@@ -145,25 +168,89 @@
       [(Ok (Unary (BoolT b) _)) (s-un (BoolT (not b)))]
       [_ r])))
 
+; (number | bool) < string < vector
+(: cmp-help (-> (Listof Type) (Either Real (-> String String))))
+(define (cmp-help tp)
+  (: vector-cmp (-> (Mutable-Vectorof (AST Type))
+                    (Mutable-Vectorof (AST Type))
+                    (Either Real (-> String String))))
+  (define (vector-cmp v w)
+    (let loop ([i : Integer 0]
+               [lv : Integer (vector-length v)]
+               [lw : Integer (vector-length w)])
+      (cond
+        [(or (= i lv) (= i lw))
+         (cond
+           [(= lv lw) (Ok 0)]
+           [(= i lv) (Ok -1)]
+           [else (Ok 1)])]
+        [else (let ([ve (vector-ref v i)]
+                    [we (vector-ref w i)])
+                (match (list ve we)
+                  [(list (Nil) _)
+                   (Fail (lambda ([sop : String])
+                           (string-append "[ERROR] " sop ": used on nil")))]
+                  [(list _ (Nil))
+                   (Fail (lambda ([sop : String])
+                           (string-append "[ERROR] " sop ": used on nil")))]
+                  [(list (Binary _ _ _) _)
+                   (Fail (lambda ([sop : String])
+                           (string-append "[ERROR] " sop ": used on binary")))]
+                  [(list _ (Binary _ _ _))
+                   (Fail (lambda ([sop : String])
+                           (string-append "[ERROR] " sop ": used on binary")))]
+                  [(list (Unary t1 _) (Unary t2 _))
+                   (match (cmp-help (list t1 t2))
+                     [(Ok 0) (loop (add1 i) lv lw)]
+                     [(Ok -1) (Ok -1)]
+                     [(Ok 1) (Ok 1)]
+                     [(Fail f) (Fail f)])]))])))
+  (match tp
+    [(list (BoolT b) (NumberT n))
+     (cmp-help (list (NumberT (if b 1 0)) (NumberT n)))]
+    [(list (BoolT b1) (BoolT b2))
+     (match (list b1 b2)
+       [(list #t #t) (Ok 0)]
+       [(list #f #f) (Ok 0)]
+       [(list #t #f) (Ok 1)]
+       [(list #f #t) (Ok -1)])]
+    [(list (BoolT _) _)
+     (Ok -1)]
+    [(list (NumberT n) (BoolT b))
+     (cmp-help (list (NumberT n) (NumberT (if b 1 0))))]
+    [(list (NumberT n) (NumberT m))
+     (Ok
+      (cond ((> n m) 1)
+            ((= n m) 0)
+            (else   -1)))]
+    [(list (NumberT n) _)
+     (Ok -1)]
+    [(list (StringT sv1) (StringT sv2))
+     (let ([s1 (list->string (vector->list sv1))]
+           [s2 (list->string (vector->list sv2))])
+       (cond
+         [(string-ci<? s1 s2) (Ok -1)]
+         [(string-ci>? s1 s2) (Ok 1)]
+         [else (Ok 0)]))]
+    [(list (StringT _) _)
+     (Ok -1)]
+    [(list (VectorT v) (VectorT w))
+     (vector-cmp v w)]
+    [(list (VectorT _) _)
+     (Ok -1)]
+    [_
+     (Fail (lambda ([sop : String])
+             (string-append "[ERROR] " sop ": unsupported type")))]))
 
 (: cmp (-> (-> Real Boolean)
            String
            binop-signature))
 (define (cmp func sop)
   (lambda (t1 t2 ic e)
-     (let ((c
-            (match (list t1 t2)
-              [(list (NumberT n) (NumberT m))
-               (Ok
-                (cond ((> n m) 1)
-                      ((= n m) 0)
-                      (else   -1)))]
-              [_
-               (Fail (string-append "[ERROR] " sop ": unsupported type"))])))
-       ; debug inject-either
+     (let ([c (cmp-help (list t1 t2))])
        (match c
          [(Ok n) (s-un (BoolT (func n)))]
-         [(Fail f) (Fail f)]))))
+         [(Fail f) (Fail (f sop))]))))
 
 (: lt binop-signature)
 (define lt (cmp (lambda (n) (< n 0)) "<"))
@@ -337,8 +424,8 @@
   (lambda (tl ic e)
     (match tl
       [(list (NumberT n))
-       (if (not (integer? n))
-           (Fail "[ERROR] iota: integer expected")
+       (if (or (not (integer? n)) (and (integer? n) (< n 0)))
+           (Fail "[ERROR] iota: positive integer expected")
            (let ([v : (Mutable-Vectorof (AST Type))
                     (make-vector (cast n Integer) (Nil))])
              (let loop ([i : Integer 0])
@@ -425,8 +512,8 @@
   (lambda (tl ic e)
     (match tl
       [(list (NumberT n) t)
-       (if (not (integer? n))
-           (Fail "[ERROR] drop: integer expected")
+       (if (or (not (integer? n)) (and (integer? n) (< n 0)))
+           (Fail "[ERROR] drop: positive integer expected")
            (match t
              [(StringT s) (s-un (StringT (f (cast n Integer) s #\0)))]
              [(VectorT v) (s-un (VectorT (f (cast n Integer) v (Nil))))]
@@ -446,8 +533,8 @@
   (lambda (tl ic e)
     (match tl
       [(list (NumberT n) t)
-       (if (not (integer? n))
-           (Fail "[ERROR] take: integer expected")
+       (if (or (not (integer? n)) (and (integer? n) (< n 0)))
+           (Fail "[ERROR] take: positive integer expected")
            (match t
              [(StringT s) (s-un (StringT (f (cast n Integer) s #\0)))]
              [(VectorT v) (s-un (VectorT (f (cast n Integer) v (Nil))))]
@@ -483,6 +570,29 @@
        (Fail "[ERROR] read_dsv: separator should be 1 char long string")]
       [_
        (Fail "[ERROR] read_dsv: filename should be string")])))
+
+(: read-dsv-f core-signature)
+(define (read-dsv-strings-f ev)
+  (lambda (tl ic e)
+    (match tl
+      [(list (StringT fn) (StringT sep) (StringT qt))
+       (cond
+         [(> (vector-length sep) 1)
+          (Fail "[ERROR] read_dsv_strings: separator should be 1 char long string")]
+         [(> (vector-length qt) 1)
+          (Fail "[ERROR] read_dsv_strings: quote should be 1 char long string")]
+         [else
+          (read-dsv (list->string (vector->list fn))
+                    (vector-ref sep 0)
+                    (vector-ref qt 0)
+                    #f
+                    "read_dsv_strings")])]
+      [(list (StringT _) (StringT _) _)
+       (Fail "[ERROR] read_dsv_strings: quote should be 1 char long string")]
+      [(list (StringT _) _ (StringT _))
+       (Fail "[ERROR] read_dsv_strings: separator should be 1 char long string")]
+      [_
+       (Fail "[ERROR] read_dsv_strings: filename should be string")])))
 
 (: read-lines-f core-signature)
 (define (read-lines-f ev)
@@ -653,8 +763,8 @@
     (match tl
       [(list f (NumberT n) (VectorT v))
        (cond
-         [(not (integer? n))
-          (Fail "[ERROR] scan_n: integer expected")]
+         [(or (not (integer? n)) (and (integer? n) (< n 0)))
+          (Fail "[ERROR] scan_n: positive integer expected")]
          [(> n (vector-length v))
           (Fail "[ERROR] scan_n: integer must not be larger than vector length")]
          [else
@@ -780,7 +890,7 @@
   (lambda (tl ic e)
     (match tl
       [(list f (NumberT n) start)
-       (if (not (integer? n))
+       (if (and (not (integer? n)) (not (>= n 0)))
            (Fail "[ERROR] seq: integer expected")
            (let ([nv : (Mutable-Vectorof (AST Type))
                      (make-vector (cast n Integer) (Unary start (Nil)))])
@@ -991,6 +1101,8 @@
 (define (string-to-number-f ev)
   (lambda (tl ic e)
     (match tl
+      [(list (NumberT n))
+       (s-un (NumberT n))]
       [(list (StringT s))
        (let ([n (string->number (list->string (vector->list s)))])
          (if n
@@ -1046,15 +1158,15 @@
   (lambda (tl ic e)
     (match tl
       [(list (NumberT index) value (VectorT v))
-       (if (not (integer? index))
-           (Fail "[ERROR] amend: integer expected")
+       (if (or (not (integer? index)) (and (integer? index) (< index 0)))
+           (Fail "[ERROR] amend: positive integer expected")
            (let ([nv : (Mutable-Vectorof (AST Type)) (vector-copy v)])
              (vector-set! nv (cast index Integer) (Unary value (Nil)))
              (s-un (VectorT nv))))]
       [(list (NumberT index) (StringT s1) (StringT s2))
        (cond
-         [(not (integer? index))
-          (Fail "[ERROR] amend: integer expected")]
+         [(or (not (integer? index)) (and (integer? index) (< index 0)))
+          (Fail "[ERROR] amend: positive integer expected")]
          [(not (= (vector-length s1) 1))
           (Fail "[ERROR] amend: string length should be 1")]
          [else
@@ -1134,7 +1246,7 @@
   (lambda (tl ic e)
     (match tl
       [(list v)
-       (ev (append-ast (string->ast "\\: reduce (+)")
+       (ev (append-ast (string->ast "\\: (reduce (+)) @ (0 &>)")
                        (Unary v (Nil)))
            ic e)])))
 
@@ -1229,6 +1341,7 @@
    "take" (list 2 take-f)
    "read_table" (list 1 read-table-f)
    "read_dsv" (list 3 read-dsv-f)
+   "read_dsv_strings" (list 3 read-dsv-strings-f)
    "read_lines" (list 1 read-lines-f)
    "length" (list 1 length-f)
    "replicate" (list 2 replicate-f)

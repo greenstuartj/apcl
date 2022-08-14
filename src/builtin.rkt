@@ -1361,7 +1361,7 @@
   (lambda (tl ic e)
     (match tl
       [(list v)
-       (ev (append-ast (string->ast "\\v: concat index (reflex sort) v")
+       (ev (append-ast (string->ast "\\v: unique concat index (reflex sort) v")
                        (Unary v (Nil)))
            ic e)])))
 
@@ -1370,7 +1370,7 @@
   (lambda (tl ic e)
     (match tl
       [(list v)
-       (ev (append-ast (string->ast "\\v: reverse concat index (reflex sort) v")
+       (ev (append-ast (string->ast "\\v: unique reverse concat index (reflex sort) v")
                        (Unary v (Nil)))
            ic e)])))
 
@@ -1464,7 +1464,7 @@
    "join" (list 3 join-f)
    "sort" (list 1 sort-f)
    "grade_up" (list 1 grade-up-f)
-   "grade_down" (list 1 grade-up-f)
+   "grade_down" (list 1 grade-down-f)
    "type_of" (list 1 type-of-f)
    "new" (list 1 new-f)
    "is_number" (list 1 (is-type "number"))

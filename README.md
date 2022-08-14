@@ -860,6 +860,41 @@ flip takes a function of two arguments and reverses the order it takes arguments
 -2
 ```
 
+### sort
+sort takes a vector or string and returns a vector or string with all elements sorted in ascending order
+
+the reverse function can be used to get the descending order
+```
+   sort [2,6,4,6,1]
+[1, 2, 4, 6, 6]
+   reverse sort [2,6,4,6,1]
+[6, 6, 4, 2, 1]
+   sort 'hello'
+ehllo
+```
+
+### grade_up
+grade up takes a vector or string and returns a vector of indicies representing the sorted ascending order of the vector or string
+
+useful for using the sorted order of one vector to order another vector
+```
+   grade_up [2,6,4,6,1]
+[4, 0, 2, 1, 3]
+   get (grade_up [2,6,4,6,1]) [2,6,4,6,1]
+[1, 2, 4, 6, 6]
+   fastest animals speeds: reverse get (grade_up speeds) animals;
+   fastest ['Swift', 'Falcon', 'Eagle'] [169, 389, 320] # km/h #
+[Falcon, Eagle, Swift]
+```
+
+### grade_down
+similar to grade_up but for descending order
+```
+   fastest animals speeds: get (grade_down speeds) animals;
+   fastest ['Swift', 'Falcon', 'Eagle'] [169, 389, 320] # km/h #
+[Falcon, Eagle, Swift]
+```
+
 ## Table/File Functions
 Tables are assumed to be a vector of equal length vectors where the subvectors are the columns and the first element is the column header
 

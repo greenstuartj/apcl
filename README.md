@@ -407,6 +407,14 @@ index can use a vector or string of elements
 [[4], [1]]
 ```
 
+### index_where
+index_where is similar to index, but takes a function and returns a vector of indicies representing the positions of elements where the function returned true after application
+```
+   starts_with c s: c = get 0 s;
+   (index_where (starts_with 'f')) ['france', 'england', 'finland', 'germany']
+[0, 2]
+```
+
 ### iota
 iota generates a vector of contiguous integers from 0 upto (but not including) its argument
 ```

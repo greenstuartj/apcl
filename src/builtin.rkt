@@ -994,6 +994,15 @@
            (f (vector-ref elem 0) s))]
       [_ (Fail "[ERROR] index: string|vector expected")])))
 
+(: index-where-f core-signature)
+(define (index-where-f ev)
+  (lambda (tl ic e)
+    (match tl
+      [(list f)
+       (ev (append-ast (string->ast "\\f: (index true) @ (map f)")
+                       (Unary f (Nil)))
+           ic e)])))
+
 (: catalogue-f core-signature)
 (define (catalogue-f ev)
   (lambda (tl ic e)
@@ -1375,7 +1384,6 @@
            ic e)])))
 
 ; group_n
-; index_where
 ; uppercase
 ; lowercase
 
@@ -1438,6 +1446,7 @@
    "rotate" (list 2 rotate-f)
    "string_to_vector" (list 1 string-to-vector-f)
    "index" (list 2 index-f)
+   "index_where" (list 1 index-where-f)
    "catalogue" (list 2 catalogue-f)
    "catalogue_with" (list 3 catalogue-with-f)
    "string" (list 1 string-f)

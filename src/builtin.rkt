@@ -1291,13 +1291,93 @@
     (match tl
       [(list t) (s-un (copy-type t))])))
 
+(: merge (-> (Listof (AST Type)) (Listof (AST Type))
+             (Either (Listof (AST Type)) String)))
+(define (merge lst1 lst2)
+  (let loop ([a : (Listof (AST Type)) lst1]
+             [b : (Listof (AST Type)) lst2]
+             [acc : (Listof (AST Type)) '()])
+  (cond
+    [(null? a) (Ok (append (reverse acc) b))]
+    [(null? b) (Ok (append (reverse acc) a))]
+    [else (match (list (car a) (car b))
+            [(list (Nil) _)
+             (Fail "[ERROR] attempting to sort nil")]
+            [(list _ (Nil))
+             (Fail "[ERROR] attempting to sort nil")]
+            [(list (Binary _ _ _) _)
+             (Fail "[ERROR] attempting to sort binary")]
+            [(list _ (Binary _ _ _))
+             (Fail "[ERROR] attempting to sort binary")]
+            [(list (Unary t1 _) (Unary t2 _))
+             (match (cmp-help (list t1 t2))
+               [(Fail f) (Fail "[ERROR] attempting to sort unhandled types")]
+               [(Ok -1) (loop (cdr a)
+                              b
+                              (cons (car a) acc))]
+               [(Ok 0) (loop (cdr a)
+                             b
+                             (cons (car a) acc))]
+               [(Ok 1) (loop a
+                             (cdr b)
+                             (cons (car b) acc))])])])))
+
+(: merge-sort (-> (Listof (AST Type)) (Either (Listof (AST Type)) String)))
+(define (merge-sort lst)
+  (cond
+   [(null? lst) (Ok lst)]
+   [(null? (cdr lst)) (Ok lst)]
+   [else
+    (let* ([index (quotient (length lst) 2)]
+	   [left (take lst index)]
+	   [right (drop lst index)])
+      (match (list (merge-sort left) (merge-sort right))
+        [(list (Fail s) _) (Fail s)]
+        [(list _ (Fail s)) (Fail s)]
+        [(list (Ok a) (Ok b)) (merge a b)]))]))
+
+(: sort-f core-signature)
+(define (sort-f ev)
+  (lambda (tl ic e)
+    (match tl
+      [(list (VectorT v))
+       (match (merge-sort (vector->list v))
+         [(Fail x) (Fail x)]
+         [(Ok lst) (s-un (VectorT (list->vector lst)))])]
+      [(list (StringT s))
+       (match (merge-sort (map (lambda ([c : Char])
+                                 (Unary (StringT (vector c)) (Nil)))
+                               (vector->list s)))
+         [(Fail x) (Fail x)]
+         [(Ok lst) (s-un (StringT (list->vector
+                                   (map (lambda ([t : (AST Type)])
+                                          (match t
+                                            [(Unary (StringT v) _) (vector-ref v 0)]))
+                                        lst))))])]
+      [_ (Fail "[ERROR] sort: vector|string expected")])))
+
+(: grade-up-f core-signature)
+(define (grade-up-f ev)
+  (lambda (tl ic e)
+    (match tl
+      [(list v)
+       (ev (append-ast (string->ast "\\v: concat index (reflex sort) v")
+                       (Unary v (Nil)))
+           ic e)])))
+
+(: grade-down-f core-signature)
+(define (grade-down-f ev)
+  (lambda (tl ic e)
+    (match tl
+      [(list v)
+       (ev (append-ast (string->ast "\\v: reverse concat index (reflex sort) v")
+                       (Unary v (Nil)))
+           ic e)])))
+
 ; group_n
 ; index_where
 ; uppercase
 ; lowercase
-; grade_up
-; grade_down
-; sort
 
 (: binop-table (Immutable-HashTable String binop-signature))
 (define binop-table
@@ -1382,6 +1462,9 @@
    "round" (list 2 round-f)
    "flip" (list 3 flip-f)
    "join" (list 3 join-f)
+   "sort" (list 1 sort-f)
+   "grade_up" (list 1 grade-up-f)
+   "grade_down" (list 1 grade-up-f)
    "type_of" (list 1 type-of-f)
    "new" (list 1 new-f)
    "is_number" (list 1 (is-type "number"))

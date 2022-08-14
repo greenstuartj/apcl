@@ -262,6 +262,7 @@
     [`(,(Token 'open-square _ line) . ,d)
      (let ([result (parse-vector d line)])
        (match result
+         [(Ok (list (list (Nil)) r)) (tree (LiteralVectorT (vector)) r)]
          [(Ok (list v r)) (tree (LiteralVectorT (list->vector v)) r)]
          [(Fail x) (Fail x)]))]
     [`(,(Token 'open-paren _ line) . ,d)

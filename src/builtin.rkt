@@ -1081,14 +1081,44 @@
                          (Unary tbl (Nil)))
              ic e))])))
 
+(: left-pad-f core-signature)
+(define (left-pad-f ev)
+  (lambda (tl ic e)
+    (let ([ast-s "\\len c s: (concat '' &> (map const c) iota 0 >. len - length s) & s"])
+      (match tl
+        [(list len c s)
+         (ev (append-ast (string->ast ast-s)
+                         (Unary len (Unary c (Unary s (Nil)))))
+             ic e)]))))
+
+(: right-pad-f core-signature)
+(define (right-pad-f ev)
+  (lambda (tl ic e)
+    (let ([ast-s "\\len c s: s & concat '' &> (map const c) iota 0 >. len - length s"])
+      (match tl
+        [(list len c s)
+         (ev (append-ast (string->ast ast-s)
+                         (Unary len (Unary c (Unary s (Nil)))))
+             ic e)]))))
+
 (: show-table-f core-signature)
 (define (show-table-f ev)
   (lambda (tl ic e)
     (let ([ast-s
            "\\tbl:
-              (reduce (\\v a: v & '\\n' & a))
-              (map (reduce (\\v a: (string v) & '\\t' & (string a))))
-              transpose tbl"])
+               let pad_value: \\len c s:
+                 if string_to_number s then
+                   left_pad len c s
+                 else 
+                   right_pad len c s
+               in
+               let pad_column: \\c col:
+                 let scol: (map string) col in
+                 let max: (reduce (>.)) (map length) scol in
+                 (map pad_value max c) scol
+               in
+               let show_columns: \\tbl: (map pad_column ' ') tbl in
+               (reduce join '\\n') (map reduce join '\\t') transpose (map pad_column ' ') tbl"])
       (match tl
         [(list tbl)
          (ev (append-ast (string->ast ast-s) (Unary tbl (Nil))) ic e)]))))
@@ -1451,6 +1481,8 @@
    "catalogue_with" (list 3 catalogue-with-f)
    "string" (list 1 string-f)
    "transpose" (list 1 transpose-f)
+   "left_pad" (list 3 left-pad-f)
+   "right_pad" (list 3 right-pad-f)
    "show_table" (list 1 show-table-f)
    "filter" (list 2 filter-f)
    "string_to_number" (list 1 string-to-number-f)

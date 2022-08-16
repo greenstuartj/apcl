@@ -674,8 +674,6 @@ hello_____
 
 ### show_table
 show_table takes a vector of vectors of of equal length and produces a string spanning several lines with each field separated by a tab
-
-doesnt always result in an easy to read table due to naive use of tabs
 ```
    show_table [[1,2,3], [4,5,6], [7,8,9]]
 1	4	7

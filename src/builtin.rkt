@@ -1108,9 +1108,9 @@
            "\\tbl:
                let pad_value: \\len c s:
                  if string_to_number s then
-                   left_pad len c s
+                   pad_left len c s
                  else 
-                   right_pad len c s
+                   pad_right len c s
                in
                let pad_column: \\c col:
                  let scol: (map string) col in
@@ -1481,8 +1481,8 @@
    "catalogue_with" (list 3 catalogue-with-f)
    "string" (list 1 string-f)
    "transpose" (list 1 transpose-f)
-   "left_pad" (list 3 left-pad-f)
-   "right_pad" (list 3 right-pad-f)
+   "pad_left" (list 3 left-pad-f)
+   "pad_right" (list 3 right-pad-f)
    "show_table" (list 1 show-table-f)
    "filter" (list 2 filter-f)
    "string_to_number" (list 1 string-to-number-f)

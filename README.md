@@ -658,6 +658,20 @@ catalogue_with is similar to catalogue, but takes a function to combine the pair
 [[10, 20, 30], [20, 40, 60], [30, 60, 90]]
 ```
 
+### pad_left
+pad_left adds characters to the left side of a string until it reaches a specified length. If the original string is longer than the specified length, the original string is returned unchanged
+```
+   pad_left 10 '_' 'hello'
+_____hello
+```
+
+### pad_right
+pad_right is similar to pad_left, but it add characters to the right side
+```
+   pad_right 10 '_' 'hello'
+hello_____
+```
+
 ### show_table
 show_table takes a vector of vectors of of equal length and produces a string spanning several lines with each field separated by a tab
 

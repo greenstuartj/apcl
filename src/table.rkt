@@ -7,19 +7,21 @@
 
 (: to-type (-> (Listof Char) Boolean (AST Type)))
 (define (to-type cl np)
-  (cond
-    [(null? cl)
-     (Unary (NoneT) (Nil))]
-    [(not np)
-     (Unary (StringT (list->vector cl)) (Nil))]
-    [(not (or (char-numeric? (car cl))
-              (eq? #\- (car cl))))
-     (Unary (StringT (list->vector cl)) (Nil))]
-    [else (let ([n (string->number (list->string cl))])
-            (if n
-                (Unary (NumberT (cast n Real)) (Nil))
-                (Unary (StringT (list->vector cl)) (Nil))))]))
-
+  (Unary
+   (cond
+     [(null? cl)
+      (NoneT)]
+     [(not np)
+      (StringT (list->vector cl))]
+     [(not (or (char-numeric? (car cl))
+               (eq? #\- (car cl))))
+      (StringT (list->vector cl))]
+     [else (let ([n (string->number (list->string cl))])
+             (if n
+                 (NumberT (cast n Real))
+                 (StringT (list->vector cl))))])
+   (Nil)))
+  
 (: parse-cell (-> (Listof Char) Char Char Boolean
                   (List Boolean (AST Type) (Listof Char))))
 (define (parse-cell cl sp qt np)
@@ -55,33 +57,35 @@
       [(list #t t next) (list #f (reverse (cons t acc)) next)]
       [(list #f t next) (loop next (cons t acc))])))
 
-(: vector-push-back (-> (AST Type) (AST Type)
-                        (AST Type)))
-(define (vector-push-back a b)
-  (match a
-    [(Unary (VectorT v) (Nil))
-     (Unary (VectorT (vector-append v
-                                    (ann (vector b)
-                                         (Mutable-Vectorof (AST Type)))))
-            (Nil))]))
-
-(: append-line (-> (Mutable-Vectorof (AST Type)) (Listof (AST Type)) Integer
-                   (Either (Mutable-Vectorof (AST Type)) String)))
-(define (append-line head line i)
-  (let loop ([l : (Listof (AST Type)) line]
-             [j : Integer 0]
-             [h : (Mutable-Vectorof (AST Type)) head])
+(: process-lists (-> (Listof (Mutable-Vectorof (AST Type)))
+                     (AST Type)))
+(define (process-lists rows)
+  (: len Integer)
+  (define len (length rows))
+  (: row-len Integer)
+  (define row-len (vector-length (car rows)))
+  (: table (Mutable-Vectorof (AST Type)))
+  (define table (make-vector row-len (Nil)))
+  (: prep-col (-> Integer (AST Type)))
+  (define (prep-col i)
+    (: col (Mutable-Vectorof (AST Type)))
+    (define col (make-vector len (Nil)))
+    (let loop ([j : Integer 0]
+               [rs : (Listof (Mutable-Vectorof (AST Type))) rows])
+      (cond
+        [(= j len) (Unary (VectorT col) (Nil))]
+        [(>= i (vector-length (car rs)))
+         (vector-set! col j (Unary (NoneT) (Nil)))
+         (loop (add1 i) rs)]
+        [else (let ([elem (vector-ref (car rs) i)])
+                (vector-set! col j elem))
+              (loop (add1 j) (cdr rs))])))
+  (let loop ([i : Integer 0])
     (cond
-      [(>= j (vector-length h))
-       (Ok h)]
-      [(null? l)
-       (Fail (string-append "[ERROR] malformed table on line "
-                            (format "~a" i)
-                            ". Number of columns fewer than header"))]
-      [else
-       (vector-set! h j (vector-push-back (vector-ref h j)
-                                          (car l)))
-       (loop (cdr l) (add1 j) h)])))
+      [(= i row-len) (Unary (VectorT table) (Nil))]
+      [else (let ([col (prep-col i)])
+              (vector-set! table i col))
+            (loop (add1 i))])))
 
 (: read-dsv (-> String Char Char Boolean String
                 (Either (AST Type) String)))
@@ -98,20 +102,13 @@
                              head))])
            (Ok (Unary (VectorT header) (Nil))))]
         [(list #f head next)
-         (let ([header : (Mutable-Vectorof (AST Type))
-                       (list->vector
-                        (map (lambda ([t : (AST Type)])
-                               (Unary (VectorT (vector t)) (Nil)))
-                             head))])
-           (let loop ([n : (Listof Char) next]
-                      [i : Integer 2])
-             (match (parse-line n sp qt np)
-               [(list #t line _)
-                (match (append-line header line i)
-                  [(Fail x) (Fail x)]
-                  [(Ok x) (Ok (Unary (VectorT x) (Nil)))])]
-               [(list #f line n2)
-                (match (append-line header line i)
-                  [(Fail x) (Fail x)]
-                  [_ (loop n2 (add1 i))])])))])))
+         (let loop ([acc : (Listof (Mutable-Vectorof (AST Type))) '()]
+                    [n : (Listof Char) next])
+           (match (parse-line n sp qt np)
+             [(list #t line _)
+              (Ok (process-lists (cons (list->vector head)
+                                       (reverse (cons (list->vector line) acc)))))]
+             [(list #f line n2)
+              (loop (cons (list->vector line) acc) n2)]))])))
+
                 

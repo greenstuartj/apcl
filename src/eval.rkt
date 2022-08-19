@@ -101,7 +101,7 @@
                [(Def v #f _)
                 (eval-ast (append-ast v next) icontext environment)]
                [(Def _ #t p)
-                (let ([result3 (eval-ast p icontext environment)])
+                (let ([result3 (eval-ast p (hash) environment)])
                   (match result3
                     [(Ok nv)
                      (hash-set! (Environment-defs environment)

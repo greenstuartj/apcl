@@ -268,11 +268,16 @@
 (define (or-f t1 t2 ic e)
   (match (list t1 t2)
     [(list (BoolT #f) (BoolT #f)) (s-un (BoolT #f))]
+    [(list (NoneT) (BoolT #f)) (s-un (BoolT #f))]
+    [(list (BoolT #f) (NoneT)) (s-un (BoolT #f))]
+    [(list (NoneT) (NoneT)) (s-un (BoolT #f))]
     [_ (s-un (BoolT #t))]))
 
 (: and-f binop-signature)
 (define (and-f t1 t2 ic e)
   (match (list t1 t2)
+    [(list (NoneT) _) (s-un (BoolT #f))]
+    [(list _ (NoneT)) (s-un (BoolT #f))]
     [(list (BoolT #f) _) (s-un (BoolT #f))]
     [(list _ (BoolT #f)) (s-un (BoolT #f))]
     [_ (s-un (BoolT #t))]))

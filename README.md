@@ -594,7 +594,9 @@ ceiling rounds up to the nearest whole number
 ```
 
 ### round
-round takes a number of significant digits and a decimal number to round to that many significant figures
+round takes a number of decimal places and a decimal number to round to that many decimal places
+
+trailing zeros are removed, even if the resulting number has fewer decimal places than specified
 ```
    round 2 3.14159265359
 3.14

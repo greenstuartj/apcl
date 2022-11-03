@@ -1418,6 +1418,24 @@
                        (Unary v (Nil)))
            ic e)])))
 
+(: string-replace-f core-signature)
+(define (string-replace-f ev)
+  (: stringv->string (-> (Mutable-Vectorof Char) String))
+  (define (stringv->string sv)
+    (list->string (vector->list sv)))
+  (: string->stringv (-> String (Mutable-Vectorof Char)))
+  (define (string->stringv s)
+    (list->vector (string->list s)))
+  (lambda (tl ic e)
+    (match tl
+      [(list (StringT nsv) (StringT rsv) (StringT hsv))
+       (let ([needle (stringv->string nsv)]
+             [replacement (stringv->string rsv)]
+             [haystack (stringv->string hsv)])
+         (s-un (StringT (string->stringv (string-replace haystack needle replacement)))))]
+      [_ (Fail "[ERROR] string_replace: expected 3 strings")])))
+       
+
 ; group_n
 ; uppercase
 ; lowercase
@@ -1511,6 +1529,7 @@
    "sort" (list 1 sort-f)
    "grade_up" (list 1 grade-up-f)
    "grade_down" (list 1 grade-down-f)
+   "string_replace" (list 3 string-replace-f)
    "type_of" (list 1 type-of-f)
    "new" (list 1 new-f)
    "is_number" (list 1 (is-type "number"))

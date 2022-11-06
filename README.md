@@ -878,6 +878,20 @@ roll takes an integer and returns an integer between 0 (inclusive) and the integ
 1
 ```
 
+### shuffle
+shuffle takes a vector a returns a vector containing the same elements in a random order
+```
+   shuffle [1,2,3,4,5]
+[2, 5, 4, 1, 3]
+```
+
+### deal
+deal takes two integers and generates a random sample (without repeats) of n (the first argument) numbers under m (the second argument)
+```
+   deal 3 10
+[9, 1, 7]
+```
+
 ### flip
 flip takes a function of two arguments and reverses the order it takes arguments
 ```

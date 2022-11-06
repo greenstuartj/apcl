@@ -1455,10 +1455,27 @@
                   (Unary av (Nil)))
            ic e)])))
 
+(: shuffle-f core-signature)
+(define (shuffle-f ev)
+  (lambda (tl ic e)
+    (match tl
+      [(list (VectorT vec))
+       (s-un (VectorT (list->vector (shuffle (vector->list vec)))))]
+      [_ (Fail "[ERROR] shuffle: vector expected")])))
+
+(: deal-f core-signature)
+(define (deal-f ev)
+  (lambda (tl ic e)
+    (match tl
+      [(list (NumberT n) (NumberT m))
+       (ev (append-ast (string->ast "\\n m: take n shuffle iota m")
+                       (Unary (NumberT n) (Unary (NumberT m) (Nil))))
+           ic e)]
+      [_ (Fail "[ERROR] deal: expected 2 integers")])))
+
 ; group_n
 ; uppercase
 ; lowercase
-; deal
 
 (: binop-table (Immutable-HashTable String binop-signature))
 (define binop-table
@@ -1552,6 +1569,8 @@
    "string_replace" (list 3 string-replace-f)
    "bi" (list 3 bi-f)
    "apply" (list 2 apply-f)
+   "shuffle" (list 1 shuffle-f)
+   "deal" (list 2 deal-f)
    "type_of" (list 1 type-of-f)
    "new" (list 1 new-f)
    "is_number" (list 1 (is-type "number"))

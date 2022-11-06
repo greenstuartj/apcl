@@ -470,18 +470,20 @@
   (lambda (tl ic e)
     (match tl
       [(list f (VectorT vec))
-       (let loop ([i : Integer (- (vector-length vec) 2)]
-                  [acc : (AST Type) (vector-ref vec (sub1 (vector-length vec)))])
-         (cond
-           [(< i 0) (Ok acc)]
-           [else (let ([result (ev (append-ast (Unary f (vector-ref vec i))
-                                               acc)
-                                   ic e)])
-                   (match result
-                     [(Ok r) (loop (sub1 i) r)]
-                     [(Fail x) (Fail x)]))]))]
-    [_
-     (Fail "[ERROR] reduce: vector expected")])))
+       (if (zero? (vector-length vec))
+           (Fail "[ERROR] reduce: vector must have at least 1 element")
+           (let loop ([i : Integer (- (vector-length vec) 2)]
+                      [acc : (AST Type) (vector-ref vec (sub1 (vector-length vec)))])
+             (cond
+               [(< i 0) (Ok acc)]
+               [else (let ([result (ev (append-ast (Unary f (vector-ref vec i))
+                                                   acc)
+                                       ic e)])
+                       (match result
+                         [(Ok r) (loop (sub1 i) r)]
+                         [(Fail x) (Fail x)]))])))]
+      [_
+       (Fail "[ERROR] reduce: vector expected")])))
 
 (: reverse-f core-signature)
 (define (reverse-f ev)
@@ -1434,11 +1436,13 @@
              [haystack (stringv->string hsv)])
          (s-un (StringT (string->stringv (string-replace haystack needle replacement)))))]
       [_ (Fail "[ERROR] string_replace: expected 3 strings")])))
-       
 
 ; group_n
 ; uppercase
 ; lowercase
+; bi
+; apply
+; deal
 
 (: binop-table (Immutable-HashTable String binop-signature))
 (define binop-table
@@ -1530,6 +1534,7 @@
    "grade_up" (list 1 grade-up-f)
    "grade_down" (list 1 grade-down-f)
    "string_replace" (list 3 string-replace-f)
+   "bi" (list 3 bi-f)
    "type_of" (list 1 type-of-f)
    "new" (list 1 new-f)
    "is_number" (list 1 (is-type "number"))

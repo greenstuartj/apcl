@@ -646,13 +646,6 @@ string_to_vector breaks a string into a vector of strings consisting of each cha
 [h, e, l, l, o]
 ```
 
-### string_replace
-string_replace takes a substring to be replaced, a substring to replace it with, and a string in which to do the replacements
-```
-   string_replace 'lo' '_' 'hello'
-hel_
-```
-
 ### catalogue
 catalogue takes two vectors and creates a cartesian product of all possible pairs
 ```
@@ -736,6 +729,13 @@ the first argument is the substring used to split string from the second argumen
 [some, text, separated, by, hyphens]
    string_split 'll' 'hello'
 [he, o]
+```
+
+### string_replace
+string_replace takes a substring to be replaced, a substring to replace it with, and a string in which to do the replacements
+```
+   string_replace 'lo' '_' 'hello'
+hel_
 ```
 
 ### join

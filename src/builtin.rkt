@@ -1437,11 +1437,27 @@
          (s-un (StringT (string->stringv (string-replace haystack needle replacement)))))]
       [_ (Fail "[ERROR] string_replace: expected 3 strings")])))
 
+(: bi-f core-signature)
+(define (bi-f ev)
+  (lambda (tl ic e)
+    (match tl
+      [(list func x y)
+       (ev (Unary func (Unary x (Unary func (Unary y (Nil)))))
+           ic e)])))
+
+(: apply-f core-signature)
+(define (apply-f ev)
+  (lambda (tl ic e)
+    (match tl
+      [(list f av)
+       (ev (Unary (GroupT (append-ast (string->ast "\\f av: (reduce (\\e a: a e)) (reverse av) <& f")
+                                       (Unary f (Nil))))
+                  (Unary av (Nil)))
+           ic e)])))
+
 ; group_n
 ; uppercase
 ; lowercase
-; bi
-; apply
 ; deal
 
 (: binop-table (Immutable-HashTable String binop-signature))
@@ -1535,6 +1551,7 @@
    "grade_down" (list 1 grade-down-f)
    "string_replace" (list 3 string-replace-f)
    "bi" (list 3 bi-f)
+   "apply" (list 2 apply-f)
    "type_of" (list 1 type-of-f)
    "new" (list 1 new-f)
    "is_number" (list 1 (is-type "number"))

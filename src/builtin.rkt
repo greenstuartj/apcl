@@ -728,17 +728,21 @@
   (lambda (tl ic e)
     (match tl
       [(list (VectorT m) (VectorT v))
-       (let ([result (f m v (Nil))])
-         (match result
-           [(Fail x) (Fail x)]
-           [(Ok x)
-            (s-un (VectorT x))]))]
+       (if (zero? (vector-length v))
+           (s-un (VectorT v))
+           (let ([result (f m v (Nil))])
+             (match result
+               [(Fail x) (Fail x)]
+               [(Ok x)
+                (s-un (VectorT x))])))]
       [(list (VectorT m) (StringT s))
-       (let ([result (f m s #\0)])
-         (match result
-           [(Fail x) (Fail x)]
-           [(Ok x)
-            (s-un (StringT x))]))]
+       (if (zero? (vector-length s))
+           (s-un (StringT s))
+           (let ([result (f m s #\0)])
+             (match result
+               [(Fail x) (Fail x)]
+               [(Ok x)
+                (s-un (StringT x))])))]
       [(list (VectorT _) _)
        (Fail "[ERROR] replicate: string|vector expected")]
       [_ (Fail "[ERROR] replicate: vector expected")])))

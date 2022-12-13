@@ -845,7 +845,7 @@
                     [(Ok x)
                      (vector-set! nv i x)
                      (loop (add1 i))])))])))]
-      [_ (Fail "[ERROR] zip-with: expected vector")])))
+      [_ (Fail "[ERROR] zip_with: expected vector")])))
 
 (: member-f core-signature)
 (define (member-f ev)
@@ -1477,6 +1477,14 @@
            ic e)]
       [_ (Fail "[ERROR] deal: expected 2 integers")])))
 
+(: eval-string-f core-signature)
+(define (eval-string-f ev)
+  (lambda (tl ic e)
+    (match tl
+      [(list (StringT s))
+       (ev (string->ast (list->string (vector->list s)))
+           ic e)])))
+
 ; group_n
 ; uppercase
 ; lowercase
@@ -1575,6 +1583,7 @@
    "apply" (list 2 apply-f)
    "shuffle" (list 1 shuffle-f)
    "deal" (list 2 deal-f)
+   "eval_string" (list 1 eval-string-f)
    "type_of" (list 1 type-of-f)
    "new" (list 1 new-f)
    "is_number" (list 1 (is-type "number"))

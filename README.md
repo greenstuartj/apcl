@@ -26,6 +26,7 @@ Run with `./apcl`
     result
 25
     y: 3;
+    result
 35
     factorial n: (reduce (*)) (map (+1)) iota n;
     z: factorial 5;
